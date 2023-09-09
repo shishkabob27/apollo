@@ -58,7 +58,7 @@ class Frame:
         pass
         
     def frameUpdate(self):
-        for entity in Frame.Entities:
+        for entity in self.Entities:
             entity.frameUpdate()
             entity.draw(game.screen)
         self.Camera.frameUpdate()
@@ -105,6 +105,9 @@ class Game:
             else:
                 print("No frame loaded!")
                 
+            fpstext = pygame.font.SysFont("microsoftsansserif", 16).render(f"{round(self.clock.get_fps())}", False, "white")
+            self.screen.blit(fpstext, (0, 0))
+            
             self.guimanager.update(self.dt)
             self.guimanager.draw_ui(self.screen)
             
@@ -125,8 +128,8 @@ class GameFrame(Frame):
     
     def __init__(self):
         super().__init__()
-        #create 1000 travelers at random positions for testing
-        for i in range(1000):
+        #create 100 travelers at random positions for testing
+        for i in range(100):
             traveler = Traveler()
             traveler.Position = pygame.Vector2(random.randint(0, self.Size.x), random.randint(0, self.Size.y))
             self.createEntity(traveler)
@@ -147,13 +150,13 @@ class GameFrame(Frame):
         
     def createGUI(self):
         super().createGUI()
-        self.gui_sidebar = pygame_gui.elements.UIWindow(pygame.Rect((0, 0), (196, SCREEN_HEIGHT)), game.guimanager, "Ship", resizable=True)
+        self.gui_sidebar = pygame_gui.elements.UIWindow(pygame.Rect((2, 2), (196, SCREEN_HEIGHT-24)), game.guimanager, "Ship", resizable=True)
         self.gui_sidebar_interact_travelerstext = pygame_gui.elements.UILabel(pygame.Rect((4, 0), (196, 22)), "Travelers", game.guimanager, self.gui_sidebar)
         
         self.gui_bottombar = pygame_gui.elements.UIPanel(pygame.Rect((0, SCREEN_HEIGHT - 20), (SCREEN_WIDTH, 20)), 0, game.guimanager)
-        self.gui_bottombar_interact = pygame_gui.elements.UIButton(pygame.Rect((0, 0), (128, 18)), "Interact", game.guimanager, self.gui_bottombar)
-        self.gui_bottombar_build = pygame_gui.elements.UIButton(pygame.Rect((128, 0), (128, 18)), "Build", game.guimanager, self.gui_bottombar)
-        self.gui_bottombar_destroy = pygame_gui.elements.UIButton(pygame.Rect((256, 0), (128, 18)), "Destroy", game.guimanager, self.gui_bottombar)
+        self.gui_bottombar_interact = pygame_gui.elements.UIButton(pygame.Rect((SCREEN_WIDTH - 288, 0), (94, 18)), "Interact", game.guimanager, self.gui_bottombar)
+        self.gui_bottombar_build = pygame_gui.elements.UIButton(pygame.Rect((SCREEN_WIDTH - 192, 0), (94, 18)), "Build", game.guimanager, self.gui_bottombar)
+        self.gui_bottombar_destroy = pygame_gui.elements.UIButton(pygame.Rect((SCREEN_WIDTH - 96, 0), (94, 18)), "Destroy", game.guimanager, self.gui_bottombar)
         
     def updateGUI(self):
         super().updateGUI()
@@ -214,6 +217,8 @@ class Entity:
     Size = pygame.Vector2(32, 32)
     Direction = 0 #0 = up, 1 = right, 2 = down, 3 = left
     
+    LockedInBounds = True #if true, entity cannot move out of bounds
+    
     #if false, entity will not be drawn
     Visible = True
     
@@ -229,14 +234,15 @@ class Entity:
     
     
     def setTexture(self, newtexture):
-        #check if texture path exists
-        if newtexture != None and os.path.exists(newtexture):
+        #TODO: REWRITE THIS
+        try:
+            #get texture from cache
+            self.sprite.image = pygame.image.load(newtexture).convert()
             self.texture = newtexture
-        else:
-            print(f"Texture {newtexture} does not exist!")
+        except:
+            print(f"Texture {self.texture} does not exist!")
             self.texture = "assets/sprites/missing.png"
-        
-        self.sprite.image = pygame.image.load(self.texture).convert()
+            self.sprite.image = pygame.image.load(self.texture).convert()
 
     def draw(self, screen):
         if self.Visible:
@@ -244,21 +250,70 @@ class Entity:
                 screen.blit(self.sprite.image, self.Position - game.Frame.Camera.Position)
         
     def frameUpdate(self):
+        if self.LockedInBounds:
+            if self.Position.x < 0:
+                self.Position.x = 0
+            if self.Position.y < 0:
+                self.Position.y = 0
+            if self.Position.x > game.Frame.Size.x - self.Size.x:
+                self.Position.x = game.Frame.Size.x - self.Size.x
+            if self.Position.y > game.Frame.Size.y - self.Size.y:
+                self.Position.y = game.Frame.Size.y - self.Size.y
         pass
     
     def Destroy(self):
         game.Frame.destroyEntity(self)
         
 class Traveler(Entity):
+    ai_state = 1 #0 = stopped, 1 = wandering, 2 = moving to destination
+    destinationPosition = pygame.Vector2(0, 0)
+    
     def __init__(self):
         super().__init__()
         
     def frameUpdate(self):
         super().frameUpdate()
+        
+        if self.ai_state == 1:
+            self.Wander()
+        elif self.ai_state == 2:
+            if self.Position.x < self.destinationPosition.x:
+                self.Position.x += 1
+            if self.Position.x > self.destinationPosition.x:
+                self.Position.x -= 1
+            if self.Position.y < self.destinationPosition.y:
+                self.Position.y += 1
+            if self.Position.y > self.destinationPosition.y:
+                self.Position.y -= 1
+                
+            if self.Position == self.destinationPosition:
+                self.ai_state = 0
+        elif self.ai_state == 0:
+            self.ai_state = 1
+        
             
         directionImage = f"assets/sprites/traveler_{self.Direction}.png"
-        if self.texture != directionImage:
-            self.setTexture(directionImage)
+        #if self.texture != directionImage:
+        self.setTexture(directionImage)
+            
+    def MoveToDestination(self, destination):
+        if self.ai_state != 2:
+            self.ai_state = 2
+            self.destinationPosition = destination
+        pass
+    
+    def Wander(self):
+        if random.randint(0, 10) == 0:
+            self.Direction = random.randint(0, 3)
+            
+        if self.Direction == 0:
+            self.Position.y -= 1
+        elif self.Direction == 1:
+            self.Position.x += 1
+        elif self.Direction == 2:
+            self.Position.y += 1
+        elif self.Direction == 3:
+            self.Position.x -= 1
         
 
 game = Game()

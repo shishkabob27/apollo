@@ -17,7 +17,8 @@
         "misc":
         {
             "title_bar_height": "20",
-            "enable_close_button": "0"
+            "enable_close_button": "0",
+            "shadow_width": "0"
         }
     },
 
@@ -26,6 +27,15 @@
         "misc":
         {
             "text_horiz_alignment": "left"
+        }
+    },  
+
+    "panel":
+    {
+        "misc":
+        {
+            "border_width": "1",
+            "shadow_width": "0"
         }
     }
 }
