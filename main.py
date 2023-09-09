@@ -70,7 +70,12 @@ class Game:
     def __init__(self):
         pygame.init()
         pygame.font.init()
-        pygame.display.set_caption(f"{TITLE} | {VERSION} | {platform.system()} {platform.release()}")
+        
+        if DEBUG:
+            pygame.display.set_caption(f"{TITLE} | {VERSION} | {platform.system()} {platform.release()}")
+        else:
+            pygame.display.set_caption(f"{TITLE} | {VERSION}")
+        
         self.screen = pygame.display.set_mode(SCREEN_SIZE, pygame.RESIZABLE | pygame.DOUBLEBUF | pygame.SCALED)
         self.clock = pygame.time.Clock()
         self.guimanager = pygame_gui.UIManager(SCREEN_SIZE)
@@ -93,24 +98,15 @@ class Game:
                     self.Frame.GUIButtonPressed(event.ui_element)
                 self.guimanager.process_events(event)
             
-            self.Frame.updateGUI()
-            self.guimanager.update(self.dt)
-
             if self.Frame != None:
                 self.Frame.draw(self.screen)
                 self.Frame.frameUpdate()
+                self.Frame.updateGUI()
             else:
                 print("No frame loaded!")
                 
+            self.guimanager.update(self.dt)
             self.guimanager.draw_ui(self.screen)
-            
-            #versionText = pygame.font.SysFont("microsoftsansserif", 18).render(f"Pygame {pygame.ver} | SDL {pygame.SDL.major}.{pygame.SDL.minor}.{pygame.SDL.patch} ", True, "white")
-            #self.screen.blit(versionText, (0, 0))
-            
-            #fpsText = pygame.font.SysFont("microsoftsansserif", 18).render(f"FPS: {round(self.clock.get_fps())}", True, "white")
-            #self.screen.blit(fpsText, (0, 16))
-            
-            
             
             pygame.display.flip()
 
@@ -152,7 +148,7 @@ class GameFrame(Frame):
     def createGUI(self):
         super().createGUI()
         self.gui_sidebar = pygame_gui.elements.UIWindow(pygame.Rect((0, 0), (196, SCREEN_HEIGHT)), game.guimanager, "Sidebar", resizable=True)
-        self.gui_sidebar_interact_travelerstext = pygame_gui.elements.UILabel(pygame.Rect((0, 0), (196, 18)), "Travelers", game.guimanager, self.gui_sidebar)
+        self.gui_sidebar_interact_travelerstext = pygame_gui.elements.UILabel(pygame.Rect((0, 0), (196, 22)), "Travelers", game.guimanager, self.gui_sidebar)
         
         self.gui_bottombar = pygame_gui.elements.UIPanel(pygame.Rect((0, SCREEN_HEIGHT - 20), (SCREEN_WIDTH, 20)), 0, game.guimanager)
         self.gui_bottombar_interact = pygame_gui.elements.UIButton(pygame.Rect((0, 0), (128, 18)), "Interact", game.guimanager, self.gui_bottombar)
@@ -194,7 +190,7 @@ class LoadingFrame(Frame):
         
     def draw(self, screen):
         super().draw(screen)
-        loadingText = pygame.font.SysFont("MS Sans Serif", 32).render("Loading", True, "white")
+        loadingText = pygame.font.SysFont("microsoftsansserif", 32).render("Loading", False, "white")
         screen.blit(loadingText, (SCREEN_WIDTH / 2 - loadingText.get_width() / 2, SCREEN_HEIGHT / 2 - loadingText.get_height() / 2))
 
     async def LoadAssets(self):
