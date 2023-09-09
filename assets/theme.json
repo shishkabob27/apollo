@@ -1,0 +1,31 @@
+{
+    "defaults":
+    {
+        "colours":
+        {
+           "normal_bg":"#45494e,#65696e,90"
+        },
+        "misc":
+        {
+            "text_horiz_alignment":"left"
+        }
+        
+    },
+
+    "window":
+    {
+        "misc":
+        {
+            "title_bar_height": "20",
+            "enable_close_button": "0"
+        }
+    },
+
+    "label":
+    {
+        "misc":
+        {
+            "text_horiz_alignment": "left"
+        }
+    }
+}

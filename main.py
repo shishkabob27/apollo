@@ -78,7 +78,7 @@ class Game:
         
         self.screen = pygame.display.set_mode(SCREEN_SIZE, pygame.RESIZABLE | pygame.DOUBLEBUF | pygame.SCALED)
         self.clock = pygame.time.Clock()
-        self.guimanager = pygame_gui.UIManager(SCREEN_SIZE)
+        self.guimanager = pygame_gui.UIManager(SCREEN_SIZE, "assets/theme.json")
         
         print("StellarFuse initialized")
 
@@ -147,8 +147,8 @@ class GameFrame(Frame):
         
     def createGUI(self):
         super().createGUI()
-        self.gui_sidebar = pygame_gui.elements.UIWindow(pygame.Rect((0, 0), (196, SCREEN_HEIGHT)), game.guimanager, "Sidebar", resizable=True)
-        self.gui_sidebar_interact_travelerstext = pygame_gui.elements.UILabel(pygame.Rect((0, 0), (196, 22)), "Travelers", game.guimanager, self.gui_sidebar)
+        self.gui_sidebar = pygame_gui.elements.UIWindow(pygame.Rect((0, 0), (196, SCREEN_HEIGHT)), game.guimanager, "Ship", resizable=True)
+        self.gui_sidebar_interact_travelerstext = pygame_gui.elements.UILabel(pygame.Rect((4, 0), (196, 22)), "Travelers", game.guimanager, self.gui_sidebar)
         
         self.gui_bottombar = pygame_gui.elements.UIPanel(pygame.Rect((0, SCREEN_HEIGHT - 20), (SCREEN_WIDTH, 20)), 0, game.guimanager)
         self.gui_bottombar_interact = pygame_gui.elements.UIButton(pygame.Rect((0, 0), (128, 18)), "Interact", game.guimanager, self.gui_bottombar)
