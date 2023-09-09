@@ -86,8 +86,6 @@ class Game:
             fpsText = pygame.font.SysFont("MS Sans Serif", 18).render(f"FPS: {round(self.clock.get_fps())}", True, "white")
             self.screen.blit(fpsText, (0, 16))
             
-            print(f"{self.Frame.__class__.__name__}")
-            
             pygame.display.flip()
 
         pygame.quit()
