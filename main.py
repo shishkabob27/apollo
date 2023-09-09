@@ -28,6 +28,7 @@ class Game:
                     running = False
 
             if self.Frame != None:
+                self.Frame.draw(self.screen)
                 self.Frame.frameUpdate()
                 
             versionText = pygame.font.SysFont("MS Sans Serif", 18).render(f"Pygame {pygame.ver} | SDL {pygame.SDL.major}.{pygame.SDL.minor}.{pygame.SDL.patch} ", True, "white")
@@ -46,6 +47,9 @@ class Camera:
         pass
     
     def frameUpdate(self):
+        pass
+    
+    def PositionCheck(self):
         #check if camera is out of bounds
         if self.Position.x < 0:
             self.Position.x = 0
@@ -72,16 +76,21 @@ class Frame:
     def destroyEntity(self, entity):
         del self.Entities[self.Entities.index(entity)]
         
+    def draw(self, screen):
+        pass
+        
     def frameUpdate(self):
-        self.Camera.frameUpdate()
         for entity in Frame.Entities:
             entity.frameUpdate()
             entity.draw(game.screen)
+        self.Camera.frameUpdate()
             
 class GameFrame(Frame):
     Size = pygame.Vector2(2048, 2048)
     
-    CachedFiles = ["assets/sprites/traveler_0.png", "assets/sprites/traveler_1.png", "assets/sprites/traveler_2.png", "assets/sprites/traveler_3.png"]
+    CachedFiles = ["assets/sprites/traveler_0.png", "assets/sprites/traveler_1.png", "assets/sprites/traveler_2.png", "assets/sprites/traveler_3.png", "assets/sprites/background_grass.png"]
+    
+    GrassBackground = pygame.image.load("assets/sprites/background_grass.png")
     
     def __init__(self):
         super().__init__()
@@ -103,6 +112,17 @@ class GameFrame(Frame):
         if pygame.key.get_pressed()[pygame.K_d]:
             self.Camera.Position.x += 4
             
+        self.Camera.PositionCheck()
+        
+    
+    def draw(self, screen):
+        super().draw(screen)
+        #draw grass background onlt on the screen
+        #texture is 512x512
+        for x in range(0, int(self.Size.x), 512):
+            for y in range(0, int(self.Size.y), 512):
+                screen.blit(self.GrassBackground, (x, y) - self.Camera.Position)
+                
 class LoadingFrame(Frame):
     def __init__(self, newFrame):
         super().__init__()
@@ -158,7 +178,8 @@ class Entity:
 
     def draw(self, screen):
         if self.Visible:
-            screen.blit(self.sprite.image, self.Position - game.Frame.Camera.Position)
+            if self.Position.x + self.Size.x > game.Frame.Camera.Position.x and self.Position.x < game.Frame.Camera.Position.x + SCREEN_WIDTH and self.Position.y + self.Size.y > game.Frame.Camera.Position.y and self.Position.y < game.Frame.Camera.Position.y + SCREEN_HEIGHT:
+                screen.blit(self.sprite.image, self.Position - game.Frame.Camera.Position)
         
     def frameUpdate(self):
         pass
