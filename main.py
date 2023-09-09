@@ -34,9 +34,21 @@ class Camera:
     Position = pygame.Vector2(0, 0)
     def __init__(self):
         pass
-        
+    
+    def frameUpdate(self):
+        #check if camera is out of bounds
+        if self.Position.x < 0:
+            self.Position.x = 0
+        if self.Position.y < 0:
+            self.Position.y = 0
+        if self.Position.x > game.Frame.Size.x - SCREEN_WIDTH:
+            self.Position.x = game.Frame.Size.x - SCREEN_WIDTH
+        if self.Position.y > game.Frame.Size.y - SCREEN_HEIGHT:
+            self.Position.y = game.Frame.Size.y - SCREEN_HEIGHT
+
 class Frame:
     Entities = []
+    Size = pygame.Vector2(SCREEN_WIDTH, SCREEN_HEIGHT)
     Camera = Camera()
     
     def __init__(self):
@@ -49,11 +61,14 @@ class Frame:
         self.Entities.remove(entity)
         
     def frameUpdate(self):
+        self.Camera.frameUpdate()
         for entity in Frame.Entities:
             entity.frameUpdate()
             entity.draw(game.screen)
 
 class GameFrame(Frame):
+    Size = pygame.Vector2(2048, 2048)
+    
     def __init__(self):
         super().__init__()
         self.createEntity(Traveler())
@@ -62,7 +77,7 @@ class GameFrame(Frame):
     def frameUpdate(self):
         super().frameUpdate()
         if pygame.key.get_pressed()[pygame.K_w]:
-            self.Camera.Position.y -= 16
+            self.Camera.Position.y -= 1
         if pygame.key.get_pressed()[pygame.K_s]:
             self.Camera.Position.y += 1
         if pygame.key.get_pressed()[pygame.K_a]:
