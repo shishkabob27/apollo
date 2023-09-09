@@ -2,44 +2,11 @@ import pygame
 import os
 import random
 import platform
+import asyncio
 
 from macros import * 
 
 global game
-
-class Game:
-    Frame = None
-    
-    def __init__(self):
-        pygame.init()
-        pygame.font.init()
-        pygame.display.set_caption(f"{TITLE} | {VERSION} | {platform.system()} {platform.release()}")
-        self.screen = pygame.display.set_mode(SCREEN_SIZE, pygame.RESIZABLE | pygame.DOUBLEBUF | pygame.SCALED)
-        self.clock = pygame.time.Clock()
-        print("StellarFuse initialized")
-
-    def run(self):
-        running = True
-        while running:
-            self.clock.tick(FPS)
-            self.screen.fill("black")
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
-                    running = False
-
-            if self.Frame != None:
-                self.Frame.draw(self.screen)
-                self.Frame.frameUpdate()
-                
-            versionText = pygame.font.SysFont("MS Sans Serif", 18).render(f"Pygame {pygame.ver} | SDL {pygame.SDL.major}.{pygame.SDL.minor}.{pygame.SDL.patch} ", True, "white")
-            self.screen.blit(versionText, (0, 0))
-            
-            fpsText = pygame.font.SysFont("MS Sans Serif", 18).render(f"FPS: {round(self.clock.get_fps())}", True, "white")
-            self.screen.blit(fpsText, (0, 16))
-            
-            pygame.display.flip()
-
-        pygame.quit()
 
 class Camera:
     Position = pygame.Vector2(0, 0)
@@ -84,6 +51,50 @@ class Frame:
             entity.frameUpdate()
             entity.draw(game.screen)
         self.Camera.frameUpdate()
+        
+class Game:
+    Frame = None
+    
+    def __init__(self):
+        pygame.init()
+        pygame.font.init()
+        pygame.display.set_caption(f"{TITLE} | {VERSION} | {platform.system()} {platform.release()}")
+        self.screen = pygame.display.set_mode(SCREEN_SIZE, pygame.RESIZABLE | pygame.DOUBLEBUF | pygame.SCALED)
+        self.clock = pygame.time.Clock()
+        print("StellarFuse initialized")
+
+    def run(self):
+        self.Frame = LoadingFrame(GameFrame)
+        
+        running = True
+        while running:
+            self.clock.tick(FPS)
+            self.screen.fill("black")
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+                    running = False
+
+            if self.Frame != None:
+                self.Frame.draw(self.screen)
+                self.Frame.frameUpdate()
+            else:
+                print("No frame loaded!")
+                
+            versionText = pygame.font.SysFont("MS Sans Serif", 18).render(f"Pygame {pygame.ver} | SDL {pygame.SDL.major}.{pygame.SDL.minor}.{pygame.SDL.patch} ", True, "white")
+            self.screen.blit(versionText, (0, 0))
+            
+            fpsText = pygame.font.SysFont("MS Sans Serif", 18).render(f"FPS: {round(self.clock.get_fps())}", True, "white")
+            self.screen.blit(fpsText, (0, 16))
+            
+            print(f"{self.Frame.__class__.__name__}")
+            
+            pygame.display.flip()
+
+        pygame.quit()
+        
+    def changeFrame(self, newFrame):
+        del self.Frame
+        self.Frame = newFrame()
             
 class GameFrame(Frame):
     Size = pygame.Vector2(2048, 2048)
@@ -94,7 +105,7 @@ class GameFrame(Frame):
     
     def __init__(self):
         super().__init__()
-        #create 50 travelers at random positions for testing
+        #create 1000 travelers at random positions for testing
         for i in range(1000):
             traveler = Traveler()
             traveler.Position = pygame.Vector2(random.randint(0, self.Size.x), random.randint(0, self.Size.y))
@@ -124,13 +135,25 @@ class GameFrame(Frame):
                 screen.blit(self.GrassBackground, (x, y) - self.Camera.Position)
                 
 class LoadingFrame(Frame):
+    newFrame = None
+    
     def __init__(self, newFrame):
         super().__init__()
+        self.newFrame = newFrame
+    
+    def frameUpdate(self):
+        super().frameUpdate()
+        asyncio.run(self.LoadAssets())
+        game.changeFrame(self.newFrame)
         
-        #Load Files
-        if newFrame.CachedFiles.__len__() > 0:
-            print(f"Loading assets for {newFrame.__class__.__name__}")
-            for file in newFrame.CachedFiles:
+    def draw(self, screen):
+        super().draw(screen)
+        loadingText = pygame.font.SysFont("MS Sans Serif", 32).render("Loading", True, "white")
+        screen.blit(loadingText, (SCREEN_WIDTH / 2 - loadingText.get_width() / 2, SCREEN_HEIGHT / 2 - loadingText.get_height() / 2))
+
+    async def LoadAssets(self):
+        if self.newFrame.CachedFiles.__len__() > 0:
+            for file in self.newFrame.CachedFiles:
                 if os.path.exists(file):
                     if file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg") or file.endswith(".gif") or file.endswith(".bmp") or file.endswith(".pcx") or file.endswith(".tga") or file.endswith(".tif") or file.endswith(".lbm") or file.endswith(".pbm") or file.endswith(".pgm") or file.endswith(".ppm") or file.endswith(".xpm"):
                         pygame.image.load(file).convert()
@@ -143,8 +166,6 @@ class LoadingFrame(Frame):
                         print(f"Loaded font {file}")
                 else:
                     print(f"File {file} does not exist!")
-        
-        game.Frame = newFrame()
 
 class Entity:
     Position = pygame.Vector2(0, 0)
@@ -199,5 +220,4 @@ class Traveler(Entity):
         
 
 game = Game()
-game.Frame = GameFrame()
 game.run()
