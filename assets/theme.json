@@ -21,6 +21,13 @@
             "shadow_width": "0"
         }
     },
+    "window.#title_bar":
+    {
+        "colours":
+        {
+            "normal_text":"#FFFFFF"
+        }
+    },
 
     "label":
     {
@@ -31,6 +38,15 @@
     },  
 
     "panel":
+    {
+        "misc":
+        {
+            "border_width": "1",
+            "shadow_width": "0"
+        }
+    },
+
+    "button":
     {
         "misc":
         {

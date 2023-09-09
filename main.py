@@ -285,13 +285,15 @@ class Entity:
     def __init__(self):
         self.sprite = pygame.sprite.Sprite()
         self.sprite.__init__()
-        self.setTexture(self.texture)
+        self.sprite.image = pygame.image.load("assets/sprites/missing.png").convert()
         self.sprite.rect = pygame.Rect(self.Position, self.Size)
         self.Direction = 2 #default direction is down
     
     
     def setTexture(self, newtexture):
-        #TODO: REWRITE THIS
+        if newtexture == self.texture:
+            return
+        
         try:
             self.sprite.image = pygame.image.load(newtexture).convert()
             self.texture = newtexture
@@ -323,7 +325,11 @@ class Entity:
 class Tile(Entity):
     Name = "Base Tile"
     Layer = 0
-    texture = "assets/sprites/tiles/wall.png"
+
+    def __init__(self):
+        super().__init__()
+        self.setTexture("assets/sprites/tiles/wall.png")
+    
     
 class Traveler(Entity):
     ai_state = 1 #0 = stopped, 1 = wandering, 2 = moving to destination
