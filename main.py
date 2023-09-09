@@ -117,8 +117,8 @@ class GameFrame(Frame):
     
     def draw(self, screen):
         super().draw(screen)
-        #draw grass background onlt on the screen
-        #texture is 512x512
+
+        #draw background
         for x in range(0, int(self.Size.x), 512):
             for y in range(0, int(self.Size.y), 512):
                 screen.blit(self.GrassBackground, (x, y) - self.Camera.Position)
@@ -133,7 +133,7 @@ class LoadingFrame(Frame):
             for file in newFrame.CachedFiles:
                 if os.path.exists(file):
                     if file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg") or file.endswith(".gif") or file.endswith(".bmp") or file.endswith(".pcx") or file.endswith(".tga") or file.endswith(".tif") or file.endswith(".lbm") or file.endswith(".pbm") or file.endswith(".pgm") or file.endswith(".ppm") or file.endswith(".xpm"):
-                        pygame.image.load(file)
+                        pygame.image.load(file).convert()
                         print(f"Loaded texture {file}")
                     elif file.endswith(".wav") or file.endswith(".mp3") or file.endswith(".ogg") or file.endswith(".flac"):
                         pygame.mixer.Sound(file)
@@ -173,8 +173,7 @@ class Entity:
             print(f"Texture {newtexture} does not exist!")
             self.texture = "assets/sprites/missing.png"
         
-        self.sprite.image = pygame.image.load(self.texture)
-        self.sprite.image.convert()
+        self.sprite.image = pygame.image.load(self.texture).convert()
 
     def draw(self, screen):
         if self.Visible:
