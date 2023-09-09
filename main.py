@@ -1,6 +1,8 @@
 import pygame
 import os
 
+from macros import * 
+
 global game
 
 class Game:
@@ -8,14 +10,14 @@ class Game:
     
     def __init__(self):
         pygame.init()
-        pygame.display.set_caption("APOLLO | ALPHA")
-        self.screen = pygame.display.set_mode((640, 360), pygame.RESIZABLE | pygame.DOUBLEBUF | pygame.SCALED)
+        pygame.display.set_caption(f"{TITLE} | {VERSION}")
+        self.screen = pygame.display.set_mode(SCREEN_SIZE, pygame.RESIZABLE | pygame.DOUBLEBUF | pygame.SCALED)
         self.clock = pygame.time.Clock()
 
     def run(self):
         running = True
         while running:
-            self.clock.tick(60)
+            self.clock.tick(FPS)
             self.screen.fill("black")
             for event in pygame.event.get():
                 if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
@@ -60,7 +62,7 @@ class GameFrame(Frame):
     def frameUpdate(self):
         super().frameUpdate()
         if pygame.key.get_pressed()[pygame.K_w]:
-            self.Camera.Position.y -= 1
+            self.Camera.Position.y -= 16
         if pygame.key.get_pressed()[pygame.K_s]:
             self.Camera.Position.y += 1
         if pygame.key.get_pressed()[pygame.K_a]:
