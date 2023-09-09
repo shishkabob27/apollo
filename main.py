@@ -1,5 +1,6 @@
 import pygame
 import os
+import random
 
 from macros import * 
 
@@ -13,6 +14,7 @@ class Game:
         pygame.display.set_caption(f"{TITLE} | {VERSION}")
         self.screen = pygame.display.set_mode(SCREEN_SIZE, pygame.RESIZABLE | pygame.DOUBLEBUF | pygame.SCALED)
         self.clock = pygame.time.Clock()
+        print("StellarFuse initialized")
 
     def run(self):
         running = True
@@ -71,30 +73,35 @@ class GameFrame(Frame):
     
     def __init__(self):
         super().__init__()
-        self.createEntity(Traveler())
+        #create 50 travelers at random positions for testing
+        for i in range(1000):
+            traveler = Traveler()
+            traveler.Position = pygame.Vector2(random.randint(0, self.Size.x), random.randint(0, self.Size.y))
+            self.createEntity(traveler)
         pass
         
     def frameUpdate(self):
         super().frameUpdate()
         if pygame.key.get_pressed()[pygame.K_w]:
-            self.Camera.Position.y -= 1
+            self.Camera.Position.y -= 4
         if pygame.key.get_pressed()[pygame.K_s]:
-            self.Camera.Position.y += 1
+            self.Camera.Position.y += 4
         if pygame.key.get_pressed()[pygame.K_a]:
-            self.Camera.Position.x -= 1
+            self.Camera.Position.x -= 4
         if pygame.key.get_pressed()[pygame.K_d]:
-            self.Camera.Position.x += 1
+            self.Camera.Position.x += 4
 
 class Entity:
     Position = pygame.Vector2(0, 0)
     Size = pygame.Vector2(32, 32)
     Direction = 0 #0 = up, 1 = right, 2 = down, 3 = left
     
+    #if false, entity will not be drawn
     Visible = True
     
     sprite = pygame.sprite.Sprite()
     
-    texture = "assets/sprites/missing.png" # Should not be used directly (use setTexture)
+    texture = "assets/sprites/missing.png" # Should not be set directly (use setTexture)
     
     def __init__(self):
         self.sprite.__init__()
@@ -108,7 +115,7 @@ class Entity:
         if newtexture != None and os.path.exists(newtexture):
             self.texture = newtexture
         else:
-            print(f"Texture {newtexture} does not exist")
+            print(f"Texture {newtexture} does not exist!")
             self.texture = "assets/sprites/missing.png"
         
         self.sprite.image = pygame.image.load(self.texture)
@@ -124,7 +131,7 @@ class Entity:
     def Destroy(self):
         game.Frame.destroyEntity(self)
         
-class Traveler(Entity):    
+class Traveler(Entity):
     def __init__(self):
         super().__init__()
         
