@@ -1,4 +1,5 @@
 import pygame
+import pygame_gui
 import os
 import random
 import platform
@@ -35,6 +36,7 @@ class Frame:
     CachedFiles = []
     
     def __init__(self):
+        self.createGUI()
         pass
     
     def createEntity(self, entity):
@@ -42,6 +44,15 @@ class Frame:
         
     def destroyEntity(self, entity):
         del self.Entities[self.Entities.index(entity)]
+        
+    def createGUI(self):
+        pass
+    
+    def updateGUI(self):
+        pass
+    
+    def GUIButtonPressed(self, button):
+        pass
         
     def draw(self, screen):
         pass
@@ -54,6 +65,7 @@ class Frame:
         
 class Game:
     Frame = None
+    dt = 0
     
     def __init__(self):
         pygame.init()
@@ -61,6 +73,8 @@ class Game:
         pygame.display.set_caption(f"{TITLE} | {VERSION} | {platform.system()} {platform.release()}")
         self.screen = pygame.display.set_mode(SCREEN_SIZE, pygame.RESIZABLE | pygame.DOUBLEBUF | pygame.SCALED)
         self.clock = pygame.time.Clock()
+        self.guimanager = pygame_gui.UIManager(SCREEN_SIZE)
+        
         print("StellarFuse initialized")
 
     def run(self):
@@ -69,10 +83,18 @@ class Game:
         running = True
         while running:
             self.clock.tick(FPS)
+            self.dt = self.clock.get_time() / 1000
             self.screen.fill("black")
             for event in pygame.event.get():
                 if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                     running = False
+                    
+                if event.type == pygame_gui.UI_BUTTON_PRESSED:
+                    self.Frame.GUIButtonPressed(event.ui_element)
+                self.guimanager.process_events(event)
+            
+            self.Frame.updateGUI()
+            self.guimanager.update(self.dt)
 
             if self.Frame != None:
                 self.Frame.draw(self.screen)
@@ -80,11 +102,15 @@ class Game:
             else:
                 print("No frame loaded!")
                 
-            versionText = pygame.font.SysFont("MS Sans Serif", 18).render(f"Pygame {pygame.ver} | SDL {pygame.SDL.major}.{pygame.SDL.minor}.{pygame.SDL.patch} ", True, "white")
-            self.screen.blit(versionText, (0, 0))
+            self.guimanager.draw_ui(self.screen)
             
-            fpsText = pygame.font.SysFont("MS Sans Serif", 18).render(f"FPS: {round(self.clock.get_fps())}", True, "white")
-            self.screen.blit(fpsText, (0, 16))
+            #versionText = pygame.font.SysFont("microsoftsansserif", 18).render(f"Pygame {pygame.ver} | SDL {pygame.SDL.major}.{pygame.SDL.minor}.{pygame.SDL.patch} ", True, "white")
+            #self.screen.blit(versionText, (0, 0))
+            
+            #fpsText = pygame.font.SysFont("microsoftsansserif", 18).render(f"FPS: {round(self.clock.get_fps())}", True, "white")
+            #self.screen.blit(fpsText, (0, 16))
+            
+            
             
             pygame.display.flip()
 
@@ -123,6 +149,28 @@ class GameFrame(Frame):
             
         self.Camera.PositionCheck()
         
+    def createGUI(self):
+        super().createGUI()
+        self.gui_sidebar = pygame_gui.elements.UIWindow(pygame.Rect((0, 0), (196, SCREEN_HEIGHT)), game.guimanager, "Sidebar", resizable=True)
+        self.gui_sidebar_interact_travelerstext = pygame_gui.elements.UILabel(pygame.Rect((0, 0), (196, 18)), "Travelers", game.guimanager, self.gui_sidebar)
+        
+        self.gui_bottombar = pygame_gui.elements.UIPanel(pygame.Rect((0, SCREEN_HEIGHT - 20), (SCREEN_WIDTH, 20)), 0, game.guimanager)
+        self.gui_bottombar_interact = pygame_gui.elements.UIButton(pygame.Rect((0, 0), (128, 18)), "Interact", game.guimanager, self.gui_bottombar)
+        self.gui_bottombar_build = pygame_gui.elements.UIButton(pygame.Rect((128, 0), (128, 18)), "Build", game.guimanager, self.gui_bottombar)
+        self.gui_bottombar_destroy = pygame_gui.elements.UIButton(pygame.Rect((256, 0), (128, 18)), "Destroy", game.guimanager, self.gui_bottombar)
+        
+    def updateGUI(self):
+        super().updateGUI()
+        #get count of entities of type Traveler
+        travnum = 0
+        for entity in self.Entities:
+            if isinstance(entity, Traveler):
+                travnum += 1
+                
+        self.gui_sidebar_interact_travelerstext.set_text(f"Travelers: {self.Entities.__len__()}")
+        
+    def GUIButtonPressed(self, button):
+        super().GUIButtonPressed(button)
     
     def draw(self, screen):
         super().draw(screen)
