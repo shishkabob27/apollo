@@ -1,6 +1,7 @@
 import pygame
 import os
 import random
+import platform
 
 from macros import * 
 
@@ -11,7 +12,7 @@ class Game:
     
     def __init__(self):
         pygame.init()
-        pygame.display.set_caption(f"{TITLE} | {VERSION}")
+        pygame.display.set_caption(f"{TITLE} | {VERSION} | {platform.system()} {platform.release()}")
         self.screen = pygame.display.set_mode(SCREEN_SIZE, pygame.RESIZABLE | pygame.DOUBLEBUF | pygame.SCALED)
         self.clock = pygame.time.Clock()
         print("StellarFuse initialized")
@@ -53,6 +54,8 @@ class Frame:
     Size = pygame.Vector2(SCREEN_WIDTH, SCREEN_HEIGHT)
     Camera = Camera()
     
+    CachedFiles = []
+    
     def __init__(self):
         pass
     
@@ -67,9 +70,11 @@ class Frame:
         for entity in Frame.Entities:
             entity.frameUpdate()
             entity.draw(game.screen)
-
+            
 class GameFrame(Frame):
     Size = pygame.Vector2(2048, 2048)
+    
+    CachedFiles = ["assets/sprites/traveler_0.png", "assets/sprites/traveler_1.png", "assets/sprites/traveler_2.png", "assets/sprites/traveler_3.png"]
     
     def __init__(self):
         super().__init__()
@@ -90,6 +95,29 @@ class GameFrame(Frame):
             self.Camera.Position.x -= 4
         if pygame.key.get_pressed()[pygame.K_d]:
             self.Camera.Position.x += 4
+            
+class LoadingFrame(Frame):
+    def __init__(self, newFrame):
+        super().__init__()
+        
+        #Load Files
+        if newFrame.CachedFiles.__len__() > 0:
+            print(f"Loading assets for {newFrame.__class__.__name__}")
+            for file in newFrame.CachedFiles:
+                if os.path.exists(file):
+                    if file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg") or file.endswith(".gif") or file.endswith(".bmp") or file.endswith(".pcx") or file.endswith(".tga") or file.endswith(".tif") or file.endswith(".lbm") or file.endswith(".pbm") or file.endswith(".pgm") or file.endswith(".ppm") or file.endswith(".xpm"):
+                        pygame.image.load(file)
+                        print(f"Loaded texture {file}")
+                    elif file.endswith(".wav") or file.endswith(".mp3") or file.endswith(".ogg") or file.endswith(".flac"):
+                        pygame.mixer.Sound(file)
+                        print(f"Loaded sound {file}")
+                    elif file.endswith(".ttf") or file.endswith(".otf"):
+                        pygame.font.Font(file)
+                        print(f"Loaded font {file}")
+                else:
+                    print(f"File {file} does not exist!")
+        
+        game.Frame = newFrame()
 
 class Entity:
     Position = pygame.Vector2(0, 0)
