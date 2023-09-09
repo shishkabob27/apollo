@@ -122,9 +122,13 @@ class Game:
 class GameFrame(Frame):
     Size = pygame.Vector2(2048, 2048)
     
-    CachedFiles = ["assets/sprites/traveler_0.png", "assets/sprites/traveler_1.png", "assets/sprites/traveler_2.png", "assets/sprites/traveler_3.png", "assets/sprites/background_grass.png"]
+    CachedFiles = ["assets/sprites/traveler_0.png", "assets/sprites/traveler_1.png", "assets/sprites/traveler_2.png", "assets/sprites/traveler_3.png", "assets/sprites/background_grass.png", "assets/sprites/select_build.png", "assets/sprites/select_destroy.png"]
     
     GrassBackground = pygame.image.load("assets/sprites/background_grass.png")
+    SelectBuildImage = pygame.image.load("assets/sprites/select_build.png")
+    SelectDestroyImage = pygame.image.load("assets/sprites/select_destroy.png")
+    
+    Mode = "interact" #interact, build, destroy
     
     def __init__(self):
         super().__init__()
@@ -147,7 +151,50 @@ class GameFrame(Frame):
             self.Camera.Position.x += 4
             
         self.Camera.PositionCheck()
+
+        #draw interact selection box
+        #align to 32x32 grid
+        mousepos = pygame.Vector2(pygame.mouse.get_pos()[0] + self.Camera.Position.x, pygame.mouse.get_pos()[1] + self.Camera.Position.y)
+        mousepos.x -= mousepos.x % 32
+        mousepos.y -= mousepos.y % 32
         
+        if self.Mode != "interact":
+            SelectImage = None
+            if self.Mode == "build":
+                SelectImage = self.SelectBuildImage
+            elif self.Mode == "destroy":
+                SelectImage = self.SelectDestroyImage
+            
+            game.screen.blit(SelectImage, mousepos - self.Camera.Position)
+        
+        #if left mouse button is pressed
+        if pygame.mouse.get_pressed()[0] and self.Mode == "build":
+            #check if tile isn't already occupied
+            tileOccupied = False
+            for entity in self.Entities:
+                if entity.Position == mousepos:
+                    tileOccupied = True
+                    break
+            if not tileOccupied:
+                #create tile at mouse position
+                tile = Tile()
+                tile.Position = mousepos
+                self.createEntity(tile)
+        elif pygame.mouse.get_pressed()[0] and self.Mode == "destroy":
+            #check if tile is occupied
+            tileOccupied = False
+            for entity in self.Entities:
+                if entity.Position == mousepos:
+                    tileOccupied = True
+                    break
+            if tileOccupied:
+                #destroy tile at mouse position
+                for entity in self.Entities:
+                    if entity.Position == mousepos:
+                        entity.Destroy()
+                        break
+            
+
     def createGUI(self):
         super().createGUI()
         self.gui_sidebar = pygame_gui.elements.UIWindow(pygame.Rect((2, 2), (196, SCREEN_HEIGHT-24)), game.guimanager, "Ship", resizable=True)
@@ -166,10 +213,17 @@ class GameFrame(Frame):
             if isinstance(entity, Traveler):
                 travnum += 1
                 
-        self.gui_sidebar_interact_travelerstext.set_text(f"Travelers: {self.Entities.__len__()}")
+        self.gui_sidebar_interact_travelerstext.set_text(f"Travelers: {travnum}")
         
     def GUIButtonPressed(self, button):
         super().GUIButtonPressed(button)
+        
+        if button == self.gui_bottombar_interact:
+            self.Mode = "interact"
+        elif button == self.gui_bottombar_build:
+            self.Mode = "build"
+        elif button == self.gui_bottombar_destroy:
+            self.Mode = "destroy"
     
     def draw(self, screen):
         super().draw(screen)
@@ -213,20 +267,23 @@ class LoadingFrame(Frame):
                     print(f"File {file} does not exist!")
 
 class Entity:
+    Health = 100
     Position = pygame.Vector2(0, 0)
     Size = pygame.Vector2(32, 32)
     Direction = 0 #0 = up, 1 = right, 2 = down, 3 = left
     
     LockedInBounds = True #if true, entity cannot move out of bounds
     
-    #if false, entity will not be drawn
-    Visible = True
+    Collidable = True #if true, entity will collide with other entities
     
-    sprite = pygame.sprite.Sprite()
+    Visible = True #if false, entity will not be drawn
+    
+    sprite = None
     
     texture = "assets/sprites/missing.png" # Should not be set directly (use setTexture)
     
     def __init__(self):
+        self.sprite = pygame.sprite.Sprite()
         self.sprite.__init__()
         self.setTexture(self.texture)
         self.sprite.rect = pygame.Rect(self.Position, self.Size)
@@ -236,7 +293,6 @@ class Entity:
     def setTexture(self, newtexture):
         #TODO: REWRITE THIS
         try:
-            #get texture from cache
             self.sprite.image = pygame.image.load(newtexture).convert()
             self.texture = newtexture
         except:
@@ -263,7 +319,12 @@ class Entity:
     
     def Destroy(self):
         game.Frame.destroyEntity(self)
-        
+
+class Tile(Entity):
+    Name = "Base Tile"
+    Layer = 0
+    texture = "assets/sprites/tiles/wall.png"
+    
 class Traveler(Entity):
     ai_state = 1 #0 = stopped, 1 = wandering, 2 = moving to destination
     destinationPosition = pygame.Vector2(0, 0)
