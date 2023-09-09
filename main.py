@@ -12,6 +12,7 @@ class Game:
     
     def __init__(self):
         pygame.init()
+        pygame.font.init()
         pygame.display.set_caption(f"{TITLE} | {VERSION} | {platform.system()} {platform.release()}")
         self.screen = pygame.display.set_mode(SCREEN_SIZE, pygame.RESIZABLE | pygame.DOUBLEBUF | pygame.SCALED)
         self.clock = pygame.time.Clock()
@@ -28,7 +29,13 @@ class Game:
 
             if self.Frame != None:
                 self.Frame.frameUpdate()
-
+                
+            versionText = pygame.font.SysFont("MS Sans Serif", 18).render(f"Pygame {pygame.ver} | SDL {pygame.SDL.major}.{pygame.SDL.minor}.{pygame.SDL.patch} ", True, "white")
+            self.screen.blit(versionText, (0, 0))
+            
+            fpsText = pygame.font.SysFont("MS Sans Serif", 18).render(f"FPS: {round(self.clock.get_fps())}", True, "white")
+            self.screen.blit(fpsText, (0, 16))
+            
             pygame.display.flip()
 
         pygame.quit()
@@ -63,7 +70,7 @@ class Frame:
         self.Entities.append(entity)
         
     def destroyEntity(self, entity):
-        self.Entities.remove(entity)
+        del self.Entities[self.Entities.index(entity)]
         
     def frameUpdate(self):
         self.Camera.frameUpdate()
