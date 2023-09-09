@@ -130,6 +130,8 @@ class GameFrame(Frame):
     
     Mode = "interact" #interact, build, destroy
     
+    Money = 100000
+    
     def __init__(self):
         super().__init__()
         #create 100 travelers at random positions for testing
@@ -169,17 +171,19 @@ class GameFrame(Frame):
         
         #if left mouse button is pressed
         if pygame.mouse.get_pressed()[0] and self.Mode == "build":
-            #check if tile isn't already occupied
-            tileOccupied = False
-            for entity in self.Entities:
-                if entity.Position == mousepos:
-                    tileOccupied = True
-                    break
-            if not tileOccupied:
-                #create tile at mouse position
-                tile = Tile()
-                tile.Position = mousepos
-                self.createEntity(tile)
+            if self.Money >= Tile.Cost:
+                #check if tile is occupied
+                tileOccupied = False
+                for entity in self.Entities:
+                    if entity.Position == mousepos:
+                        tileOccupied = True
+                        break
+                if not tileOccupied:
+                    #create tile at mouse position
+                    tile = Tile()
+                    tile.Position = mousepos
+                    self.createEntity(tile)
+                    self.RemoveMoney(Tile.Cost)
         elif pygame.mouse.get_pressed()[0] and self.Mode == "destroy":
             #check if tile is occupied
             tileOccupied = False
@@ -192,8 +196,14 @@ class GameFrame(Frame):
                 for entity in self.Entities:
                     if entity.Position == mousepos:
                         entity.Destroy()
+                        self.AddMoney(Tile.Cost * 0.5)
                         break
-            
+    
+    def AddMoney(self, amount):
+        self.Money += amount
+    
+    def RemoveMoney(self, amount):
+        self.Money -= amount
 
     def createGUI(self):
         super().createGUI()
@@ -201,6 +211,9 @@ class GameFrame(Frame):
         self.gui_sidebar_interact_travelerstext = pygame_gui.elements.UILabel(pygame.Rect((4, 0), (196, 22)), "Travelers", game.guimanager, self.gui_sidebar)
         
         self.gui_bottombar = pygame_gui.elements.UIPanel(pygame.Rect((0, SCREEN_HEIGHT - 20), (SCREEN_WIDTH, 20)), 0, game.guimanager)
+        
+        self.gui_moneytext = pygame_gui.elements.UILabel(pygame.Rect((2, 0), (96, 18)), f"${self.Money}", game.guimanager, self.gui_bottombar)
+        
         self.gui_bottombar_interact = pygame_gui.elements.UIButton(pygame.Rect((SCREEN_WIDTH - 288, 0), (94, 18)), "Interact", game.guimanager, self.gui_bottombar)
         self.gui_bottombar_build = pygame_gui.elements.UIButton(pygame.Rect((SCREEN_WIDTH - 192, 0), (94, 18)), "Build", game.guimanager, self.gui_bottombar)
         self.gui_bottombar_destroy = pygame_gui.elements.UIButton(pygame.Rect((SCREEN_WIDTH - 96, 0), (94, 18)), "Destroy", game.guimanager, self.gui_bottombar)
@@ -214,6 +227,8 @@ class GameFrame(Frame):
                 travnum += 1
                 
         self.gui_sidebar_interact_travelerstext.set_text(f"Travelers: {travnum}")
+        
+        self.gui_moneytext.set_text(f"${self.Money:.0f}")
         
     def GUIButtonPressed(self, button):
         super().GUIButtonPressed(button)
@@ -325,6 +340,7 @@ class Entity:
 class Tile(Entity):
     Name = "Base Tile"
     Layer = 0
+    Cost = 500
 
     def __init__(self):
         super().__init__()
