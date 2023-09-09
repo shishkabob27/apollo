@@ -169,36 +169,38 @@ class GameFrame(Frame):
             
             game.screen.blit(SelectImage, mousepos - self.Camera.Position)
         
-        #if left mouse button is pressed
-        if pygame.mouse.get_pressed()[0] and self.Mode == "build":
-            if self.Money >= Tile.Cost:
+        #check if mouse isnt on gui
+        if pygame.mouse.get_pressed()[0] and not game.guimanager.get_hovering_any_element():
+             #if left mouse button is pressed
+            if self.Mode == "build":
+                if self.Money >= Tile.Cost:
+                    #check if tile is occupied
+                    tileOccupied = False
+                    for entity in self.Entities:
+                        if entity.Position == mousepos:
+                            tileOccupied = True
+                            break
+                    if not tileOccupied:
+                        #create tile at mouse position
+                        tile = Tile()
+                        tile.Position = mousepos
+                        self.createEntity(tile)
+                        self.RemoveMoney(Tile.Cost)
+            elif self.Mode == "destroy":
                 #check if tile is occupied
                 tileOccupied = False
                 for entity in self.Entities:
                     if entity.Position == mousepos:
                         tileOccupied = True
                         break
-                if not tileOccupied:
-                    #create tile at mouse position
-                    tile = Tile()
-                    tile.Position = mousepos
-                    self.createEntity(tile)
-                    self.RemoveMoney(Tile.Cost)
-        elif pygame.mouse.get_pressed()[0] and self.Mode == "destroy":
-            #check if tile is occupied
-            tileOccupied = False
-            for entity in self.Entities:
-                if entity.Position == mousepos:
-                    tileOccupied = True
-                    break
-            if tileOccupied:
-                #destroy tile at mouse position
-                for entity in self.Entities:
-                    if entity.Position == mousepos:
-                        entity.Destroy()
-                        self.AddMoney(Tile.Cost * 0.5)
-                        break
-    
+                if tileOccupied:
+                    #destroy tile at mouse position
+                    for entity in self.Entities:
+                        if entity.Position == mousepos:
+                            entity.Destroy()
+                            self.AddMoney(Tile.Cost * 0.5)
+                            break
+        
     def AddMoney(self, amount):
         self.Money += amount
     
