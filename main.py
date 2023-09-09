@@ -18,10 +18,11 @@ class Game:
             self.clock.tick(60)
             self.screen.fill("black")
             for event in pygame.event.get():
-                if event.type == pygame.QUIT:
+                if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                     running = False
 
             if Frame != None:
+                Frame.frameUpdate()
                 for entity in Frame.Entities:
                     entity.frameUpdate()
                     entity.draw(self.screen)
@@ -41,6 +42,9 @@ class Frame:
         
     def destroyEntity(self, entity):
         self.Entities.remove(entity)
+        
+    def frameUpdate():
+        pass
 
 class GameFrame(Frame):
     def __init__(self):
@@ -49,36 +53,37 @@ class GameFrame(Frame):
         
 
 class Entity:
-    pos = pygame.Vector2(0, 0)
-    size = pygame.Vector2(32, 32)
-    direction = 0 #radians 0-360
+    Position = pygame.Vector2(0, 0)
+    Size = pygame.Vector2(32, 32)
+    Direction = 0 #0 = up, 1 = right, 2 = down, 3 = left
+    
+    Visible = True
     
     sprite = pygame.sprite.Sprite()
     
-    __texture = "assets/sprites/missing.png"
+    texture = "assets/sprites/missing.png" # Should not be used directly (use setTexture)
     
     def __init__(self):
         self.sprite.__init__()
-        self.setTexture(self.__texture)
-        self.sprite.rect = pygame.Rect(self.pos, self.size)
+        self.setTexture(self.texture)
+        self.sprite.rect = pygame.Rect(self.Position, self.Size)
+        self.Direction = 2 #default direction is down
     
     
-    def setTexture(self, texture):
+    def setTexture(self, newtexture):
         #check if texture path exists
-        if texture != None and os.path.exists(texture):
-            self.__texture = pygame.image.load(texture)
+        if newtexture != None and os.path.exists(newtexture):
+            self.texture = newtexture
         else:
-            print(f"Texture {texture} does not exist")
-            self.__texture = pygame.image.load("assets/sprites/missing.png")
+            print(f"Texture {newtexture} does not exist")
+            self.texture = "assets/sprites/missing.png"
         
-        self.sprite.image = self.__texture
+        self.sprite.image = pygame.image.load(self.texture)
         self.sprite.image.convert()
-        
 
     def draw(self, screen):
-        #draw sprite with openGL
-        screen.blit(self.sprite.image, self.pos)
-        
+        if self.Visible:
+            screen.blit(self.sprite.image, self.Position)
         
     def frameUpdate(self):
         pass
@@ -86,13 +91,30 @@ class Entity:
     def Destroy(self):
         game.Frame.destroyEntity(self)
         
-class Traveler(Entity):
+class Traveler(Entity):    
     def __init__(self):
         super().__init__()
-        self.setTexture("assets/sprites/traveler.png")
         
     def frameUpdate(self):
-        pass
+        #test movement
+        
+        if pygame.key.get_pressed()[pygame.K_s]:
+            self.Position.y += 1
+            self.Direction = 2
+        if pygame.key.get_pressed()[pygame.K_a]:
+            self.Position.x -= 1
+            self.Direction = 3
+            
+        if pygame.key.get_pressed()[pygame.K_w]:
+            self.Position.y -= 1
+            self.Direction = 0
+        if pygame.key.get_pressed()[pygame.K_d]:
+            self.Position.x += 1
+            self.Direction = 1
+            
+        directionImage = f"assets/sprites/traveler_{self.Direction}.png"
+        if self.texture != directionImage:
+            self.setTexture(directionImage)
         
 
 game = Game()
