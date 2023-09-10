@@ -41,6 +41,8 @@ class Frame:
     
     def createEntity(self, entity):
         self.Entities.append(entity)
+        #sort entities by draw layer
+        self.Entities.sort(key=lambda x: x.DrawOrder)
         
     def destroyEntity(self, entity):
         del self.Entities[self.Entities.index(entity)]
@@ -122,14 +124,22 @@ class Game:
 class GameFrame(Frame):
     Size = pygame.Vector2(2048, 2048)
     
-    CachedFiles = ["assets/sprites/traveler_0.png", "assets/sprites/traveler_1.png", "assets/sprites/traveler_2.png", "assets/sprites/traveler_3.png", "assets/sprites/background_grass.png", "assets/sprites/select_build.png", "assets/sprites/select_destroy.png"]
+    CachedFiles = ["assets/sprites/traveler_0.png",
+                   "assets/sprites/traveler_1.png",
+                   "assets/sprites/traveler_2.png",
+                   "assets/sprites/traveler_3.png",
+                   "assets/sprites/background_grass.png",
+                   "assets/sprites/select_build.png",
+                   "assets/sprites/select_destroy.png",
+                   "assets/sprites/tiles/wall.png",
+                   "assets/sprites/tiles/floor.png"]
     
     GrassBackground = pygame.image.load("assets/sprites/background_grass.png")
     SelectBuildImage = pygame.image.load("assets/sprites/select_build.png")
     SelectDestroyImage = pygame.image.load("assets/sprites/select_destroy.png")
     
     Mode = "interact" #interact, build, destroy
-    
+    InSpace = False
     Money = 100000
     
     SelectedTile = None
@@ -155,6 +165,20 @@ class GameFrame(Frame):
             self.Camera.Position.x += 4
             
         self.Camera.PositionCheck()
+        
+        if pygame.key.get_pressed()[pygame.K_1]:
+            self.SetMode("interact")
+        if pygame.key.get_pressed()[pygame.K_2]:
+            self.SetMode("build")
+        if pygame.key.get_pressed()[pygame.K_3]:
+            self.SetMode("destroy")
+            
+        if pygame.key.get_pressed()[pygame.K_SPACE]:
+            #create 100 travelers at random positions for testing
+            for i in range(10):
+                traveler = Traveler()
+                traveler.Position = pygame.Vector2(random.randint(0, self.Size.x), random.randint(0, self.Size.y))
+                self.createEntity(traveler)
 
         #draw interact selection box
         #align to 32x32 grid
@@ -263,18 +287,20 @@ class GameFrame(Frame):
         
         self.gui_moneytext.set_text(f"${self.Money:.0f}")
         
+    def SetMode(self, mode):
+        self.Mode = mode
         
     def GUIButtonPressed(self, button):
         super().GUIButtonPressed(button)
         
         if button == self.gui_bottombar_interact:
-            self.Mode = "interact"
+            self.SetMode("interact")
             return
         elif button == self.gui_bottombar_build:
-            self.Mode = "build"
+            self.SetMode("build")
             return
         elif button == self.gui_bottombar_destroy:
-            self.Mode = "destroy"
+            self.SetMode("destroy")
             return
             
         #check if button is a tile button
@@ -287,9 +313,10 @@ class GameFrame(Frame):
         super().draw(screen)
 
         #draw background
-        for x in range(0, int(self.Size.x), 512):
-            for y in range(0, int(self.Size.y), 512):
-                screen.blit(self.GrassBackground, (x, y) - self.Camera.Position)
+        if self.InSpace == False:
+            for x in range(0, int(self.Size.x), 512):
+                for y in range(0, int(self.Size.y), 512):
+                    screen.blit(self.GrassBackground, (x, y) - self.Camera.Position)
                 
 class LoadingFrame(Frame):
     newFrame = None
@@ -357,6 +384,8 @@ class Entity:
     Size = pygame.Vector2(32, 32)
     Direction = 0 #0 = up, 1 = right, 2 = down, 3 = left
     
+    DrawOrder = 0
+    
     LockedInBounds = True #if true, entity cannot move out of bounds
     
     Collidable = True #if true, entity will collide with other entities
@@ -408,6 +437,8 @@ class Entity:
         game.Frame.destroyEntity(self)
 
 class Tile(Entity):
+    DrawOrder = 0
+    
     Name = "Base Tile"
     Layer = 0
     Cost = 500
@@ -425,6 +456,7 @@ class Floor(Tile):
     Name = "Floor"
     Layer = 0
     Cost = 100
+    Collidable = False
     
     def __init__(self):
         super().__init__()
@@ -432,6 +464,8 @@ class Floor(Tile):
     
     
 class Traveler(Entity):
+    DrawOrder = 2
+    
     ai_state = 1 #0 = stopped, 1 = wandering, 2 = moving to destination
     destinationPosition = pygame.Vector2(0, 0)
     
