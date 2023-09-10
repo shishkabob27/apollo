@@ -174,11 +174,10 @@ class GameFrame(Frame):
             self.SetMode("destroy")
             
         if pygame.key.get_pressed()[pygame.K_SPACE]:
-            #create 100 travelers at random positions for testing
-            for i in range(10):
-                traveler = Traveler()
-                traveler.Position = pygame.Vector2(random.randint(0, self.Size.x), random.randint(0, self.Size.y))
-                self.createEntity(traveler)
+            #move all travelers to mouse position
+            for entity in self.Entities:
+                if isinstance(entity, Traveler):
+                    entity.MoveToDestination(pygame.Vector2(pygame.mouse.get_pos()[0] + self.Camera.Position.x, pygame.mouse.get_pos()[1] + self.Camera.Position.y))
 
         #draw interact selection box
         #align to 32x32 grid
@@ -465,6 +464,7 @@ class Floor(Tile):
     
 class Traveler(Entity):
     DrawOrder = 2
+    Collidable = False
     
     ai_state = 1 #0 = stopped, 1 = wandering, 2 = moving to destination
     destinationPosition = pygame.Vector2(0, 0)
@@ -478,17 +478,19 @@ class Traveler(Entity):
         if self.ai_state == 1:
             self.Wander()
         elif self.ai_state == 2:
-            if self.Position.x < self.destinationPosition.x:
-                self.Position.x += 1
-            if self.Position.x > self.destinationPosition.x:
-                self.Position.x -= 1
-            if self.Position.y < self.destinationPosition.y:
-                self.Position.y += 1
-            if self.Position.y > self.destinationPosition.y:
-                self.Position.y -= 1
-                
             if self.Position == self.destinationPosition:
                 self.ai_state = 0
+                
+            if self.Position.x < self.destinationPosition.x:
+                self.Direction = 1
+            elif self.Position.x > self.destinationPosition.x:
+                self.Direction = 3
+            elif self.Position.y < self.destinationPosition.y:
+                self.Direction = 2
+            elif self.Position.y > self.destinationPosition.y:
+                self.Direction = 0
+            self.Move()
+            
         elif self.ai_state == 0:
             self.ai_state = 1
         
@@ -507,6 +509,9 @@ class Traveler(Entity):
         if random.randint(0, 10) == 0:
             self.Direction = random.randint(0, 3)
             
+        self.Move()
+            
+    def Move(self):
         if self.Direction == 0:
             self.Position.y -= 1
         elif self.Direction == 1:
@@ -515,6 +520,23 @@ class Traveler(Entity):
             self.Position.y += 1
         elif self.Direction == 3:
             self.Position.x -= 1
+            
+        #make sure traveler is not colliding with any other entities
+        for entity in game.Frame.Entities:
+            if entity.Collidable and entity != self:
+                if self.Position.x + self.Size.x > entity.Position.x and self.Position.x < entity.Position.x + entity.Size.x and self.Position.y + self.Size.y > entity.Position.y and self.Position.y < entity.Position.y + entity.Size.y:
+                    #traveler is colliding with entity
+                    #move traveler back so they are not colliding
+                    if self.Direction == 0:
+                        self.Position.y += 1
+                    elif self.Direction == 1:
+                        self.Position.x -= 1
+                    elif self.Direction == 2:
+                        self.Position.y -= 1
+                    elif self.Direction == 3:
+                        self.Position.x += 1
+                        
+                    break
         
 
 game = Game()
