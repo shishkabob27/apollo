@@ -67,6 +67,9 @@ class Frame:
             entity.draw(game.screen)
         self.Camera.frameUpdate()
         
+    def Tick(self):
+        pass
+        
     #called when frame is changed
     def endFrame(self):
         pass
@@ -78,6 +81,8 @@ class Frame:
 class Game:
     Frame = None
     dt = 0
+    
+    timesincelasttick = 0
     
     def __init__(self):
         pygame.init()
@@ -125,6 +130,14 @@ class Game:
             
             self.guimanager.update(self.dt)
             self.guimanager.draw_ui(self.screen)
+            
+            #Tick
+            self.timesincelasttick += self.clock.get_time() / 1000
+            if self.timesincelasttick >= 1 / TICKRATE:
+                self.timesincelasttick -= 1 / TICKRATE
+                self.Frame.Tick()
+                for entity in self.Frame.Entities:
+                    entity.Tick()    
             
             pygame.display.flip()
 
@@ -565,6 +578,9 @@ class Entity:
                 self.Position.x = game.Frame.Size.x - self.Size.x
             if self.Position.y > game.Frame.Size.y - self.Size.y:
                 self.Position.y = game.Frame.Size.y - self.Size.y
+        pass
+    
+    def Tick(self):
         pass
     
     def Destroy(self):
