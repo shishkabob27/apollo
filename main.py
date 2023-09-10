@@ -262,6 +262,7 @@ class GameFrame(Frame):
         self.save.data["money"] = self.Money
         self.save.data["inSpace"] = self.InSpace
         self.save.data["ticks"] = self.TickCount
+        self.save.data["time"] = round(self.save.data["time"], 2)
         
         #Camera
         self.save.data["camera"] = {
@@ -297,6 +298,8 @@ class GameFrame(Frame):
         
     def frameUpdate(self):
         super().frameUpdate()
+        
+        self.save.data["time"] += game.dt
         
         cameraspeed = 4
         if pygame.key.get_pressed()[pygame.K_LSHIFT]:
