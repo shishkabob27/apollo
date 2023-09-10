@@ -300,6 +300,7 @@ class LoadingFrame(Frame):
     
     def frameUpdate(self):
         super().frameUpdate()
+        game.guimanager.clear_and_reset()
         asyncio.run(self.LoadAssets())
         game.changeFrame(self.newFrame)
         
@@ -323,6 +324,32 @@ class LoadingFrame(Frame):
                         print(f"Loaded font {file}")
                 else:
                     print(f"File {file} does not exist!")
+                    
+class MainMenuFrame(Frame):
+    def __init__(self):
+        super().__init__()
+        pass
+    
+    def frameUpdate(self):
+        super().frameUpdate()
+        pass
+    
+    
+    def createGUI(self):
+        super().createGUI()
+        self.gui_title = pygame_gui.elements.UILabel(pygame.Rect((SCREEN_WIDTH - 64, 0), (64, 32)), f"{TITLE}", game.guimanager)
+        self.gui_playbutton = pygame_gui.elements.UIButton(pygame.Rect((2, SCREEN_HEIGHT- 52), (96, 24)), "Play", game.guimanager)
+        self.gui_quitbutton = pygame_gui.elements.UIButton(pygame.Rect((2, SCREEN_HEIGHT- 26), (96, 24)), "Quit", game.guimanager)
+        
+    def GUIButtonPressed(self, button):
+        super().GUIButtonPressed(button)
+        
+        if button == self.gui_playbutton:
+            game.Frame = LoadingFrame(GameFrame)
+        elif button == self.gui_quitbutton:
+            pygame.event.post(pygame.event.Event(pygame.QUIT))
+        
+        
 
 class Entity:
     Health = 100
