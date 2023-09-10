@@ -132,6 +132,8 @@ class GameFrame(Frame):
     
     Money = 100000
     
+    SelectedTile = None
+    
     def __init__(self):
         super().__init__()
         #create 100 travelers at random positions for testing
@@ -172,7 +174,7 @@ class GameFrame(Frame):
         #check if mouse isnt on gui
         if pygame.mouse.get_pressed()[0] and not game.guimanager.get_hovering_any_element():
              #if left mouse button is pressed
-            if self.Mode == "build":
+            if self.Mode == "build" and self.SelectedTile != None:
                 if self.Money >= Tile.Cost:
                     #check if tile is occupied
                     tileOccupied = False
@@ -182,7 +184,7 @@ class GameFrame(Frame):
                             break
                     if not tileOccupied:
                         #create tile at mouse position
-                        tile = Tile()
+                        tile = self.SelectedTile()
                         tile.Position = mousepos
                         self.createEntity(tile)
                         self.RemoveMoney(Tile.Cost)
@@ -220,6 +222,13 @@ class GameFrame(Frame):
         self.gui_bottombar_build = pygame_gui.elements.UIButton(pygame.Rect((SCREEN_WIDTH - 192, 0), (94, 18)), "Build", game.guimanager, self.gui_bottombar)
         self.gui_bottombar_destroy = pygame_gui.elements.UIButton(pygame.Rect((SCREEN_WIDTH - 96, 0), (94, 18)), "Destroy", game.guimanager, self.gui_bottombar)
         
+        #create button for each tile
+        self.tilebuttons = []
+        button_offset = 2
+        for tile in Tile.__subclasses__():
+            self.tilebuttons.append(pygame_gui.elements.UIButton(pygame.Rect((2, button_offset), (96, 16)), tile.Name, game.guimanager, self.gui_sidebar))
+            button_offset += 18
+        
     def updateGUI(self):
         super().updateGUI()
         #get count of entities of type Traveler
@@ -227,20 +236,52 @@ class GameFrame(Frame):
         for entity in self.Entities:
             if isinstance(entity, Traveler):
                 travnum += 1
-                
-        self.gui_sidebar_interact_travelerstext.set_text(f"Travelers: {travnum}")
+        
+        if self.Mode == "interact":
+            #set sidebar text
+            self.gui_sidebar.title_bar.set_text("Ship")
+            self.gui_sidebar_interact_travelerstext.set_text(f"Travelers: {travnum}")
+            self.gui_sidebar_interact_travelerstext.show()
+        else:
+            self.gui_sidebar_interact_travelerstext.hide()
+      
+        if self.Mode == "build":
+            self.gui_sidebar.title_bar.set_text("Build")
+            
+            for button in self.tilebuttons:
+                button.show()
+        else:
+            for button in self.tilebuttons:
+                button.hide()
+            
+        if self.Mode == "destroy":
+            self.gui_sidebar.hide()
+        else:
+            self.gui_sidebar.show()
+            
+        
         
         self.gui_moneytext.set_text(f"${self.Money:.0f}")
+        
         
     def GUIButtonPressed(self, button):
         super().GUIButtonPressed(button)
         
         if button == self.gui_bottombar_interact:
             self.Mode = "interact"
+            return
         elif button == self.gui_bottombar_build:
             self.Mode = "build"
+            return
         elif button == self.gui_bottombar_destroy:
             self.Mode = "destroy"
+            return
+            
+        #check if button is a tile button
+        for tile in Tile.__subclasses__():
+            if button.text == tile.Name:
+                self.SelectedTile = tile
+                return
     
     def draw(self, screen):
         super().draw(screen)
@@ -343,10 +384,24 @@ class Tile(Entity):
     Name = "Base Tile"
     Layer = 0
     Cost = 500
-
+        
+class Wall(Tile):
+    Name = "Wall"
+    Layer = 1
+    Cost = 500
+    
     def __init__(self):
         super().__init__()
         self.setTexture("assets/sprites/tiles/wall.png")
+
+class Floor(Tile):
+    Name = "Floor"
+    Layer = 0
+    Cost = 100
+    
+    def __init__(self):
+        super().__init__()
+        self.setTexture("assets/sprites/tiles/floor.png")
     
     
 class Traveler(Entity):
