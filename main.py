@@ -6,6 +6,9 @@ import random
 import platform
 import asyncio
 import json
+import time
+
+from discordrp import Presence
 
 from macros import * 
 
@@ -83,6 +86,8 @@ class Game:
     dt = 0
     
     timesincelasttick = 0
+    unixtimewhenframestarted = int(time.time())
+    timesincerichpresenceupdate = 10
     
     gui_console = None
     
@@ -103,6 +108,8 @@ class Game:
 
     def run(self):
         self.Frame = LoadingFrame(CharacterCreatorFrame)
+        
+        self.discordrpc = Presence("1150522780429848716")
         
         running = True
         while running:
@@ -153,6 +160,47 @@ class Game:
                     entity.Tick()    
             
             pygame.display.flip()
+            
+            #Discord Rich Presence
+            self.timesincerichpresenceupdate += self.clock.get_time() / 1000
+            if self.timesincerichpresenceupdate >= 10:
+                self.timesincerichpresenceupdate = 0
+                if self.Frame.__class__ == MainMenuFrame:
+                    self.discordrpc.set(
+                        {
+                            "state": "In Menu",
+                            "details": "Main Menu",
+                            "assets": {
+                                "large_image": "apollo_icon_alt"
+                            }
+                        }
+                    )
+                elif self.Frame.__class__ == CharacterCreatorFrame:
+                    self.discordrpc.set(
+                        {
+                            "state": "In Menu",
+                            "details": "Character Creator",
+                            "assets": {
+                                "large_image": "apollo_icon_alt"
+                            },
+                            "timestamps": {
+                                "start": self.unixtimewhenframestarted
+                            }
+                        }
+                    )
+                elif self.Frame.__class__ == GameFrame:
+                    self.discordrpc.set(
+                        {
+                            "state": "In Game",
+                            "details": "Building ship",
+                            "assets": {
+                                "large_image": "apollo_icon_alt"
+                            },
+                            "timestamps": {
+                                "start": self.unixtimewhenframestarted
+                            }
+                        }
+                    )
 
         pygame.quit()
         
@@ -160,6 +208,7 @@ class Game:
         self.Frame.endFrame()
         del self.Frame
         self.Frame = LoadingFrame(newFrame)
+        self.unixtimewhenframestarted = int(time.time())
         
     def ConsoleCommand(self, command):
         args = command.lower().split(" ")
