@@ -156,14 +156,19 @@ class GameFrame(Frame):
         
     def frameUpdate(self):
         super().frameUpdate()
+        
+        cameraspeed = 4
+        if pygame.key.get_pressed()[pygame.K_LSHIFT]:
+            cameraspeed = 8
+        
         if pygame.key.get_pressed()[pygame.K_w]:
-            self.Camera.Position.y -= 4
+            self.Camera.Position.y -= cameraspeed
         if pygame.key.get_pressed()[pygame.K_s]:
-            self.Camera.Position.y += 4
+            self.Camera.Position.y += cameraspeed
         if pygame.key.get_pressed()[pygame.K_a]:
-            self.Camera.Position.x -= 4
+            self.Camera.Position.x -= cameraspeed
         if pygame.key.get_pressed()[pygame.K_d]:
-            self.Camera.Position.x += 4
+            self.Camera.Position.x += cameraspeed
             
         self.Camera.PositionCheck()
         
