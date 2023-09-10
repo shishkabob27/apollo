@@ -202,9 +202,15 @@ class GameFrame(Frame):
                     #check if tile is occupied
                     tileOccupied = False
                     for entity in self.Entities:
-                        if entity.Position == mousepos:
-                            tileOccupied = True
-                            break
+                        if isinstance(entity, Tile):
+                            if entity.Position == mousepos:
+                                tileOccupied = True
+                                break
+                        if isinstance(entity, Traveler):
+                            #check traveler size because travelers are not locked in a grid
+                            if self.SelectedTile.Collidable and entity.Position.x + entity.Size.x > mousepos.x and entity.Position.x < mousepos.x + self.SelectedTile.Size.x and entity.Position.y + entity.Size.y > mousepos.y and entity.Position.y < mousepos.y + self.SelectedTile.Size.y:
+                                tileOccupied = True
+                                break
                     if not tileOccupied:
                         #create tile at mouse position
                         tile = self.SelectedTile()
