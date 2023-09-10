@@ -5,6 +5,7 @@ import sys
 import random
 import platform
 import asyncio
+import json
 
 from macros import * 
 
@@ -66,6 +67,14 @@ class Frame:
             entity.draw(game.screen)
         self.Camera.frameUpdate()
         
+    #called when frame is changed
+    def endFrame(self):
+        pass
+    
+    #called when game is closed with the frame active
+    def endGame(self):
+        pass
+        
 class Game:
     Frame = None
     dt = 0
@@ -95,6 +104,9 @@ class Game:
             self.screen.fill("black")
             for event in pygame.event.get():
                 if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+                    if self.Frame != None:
+                        self.Frame.endFrame()
+                        self.Frame.endGame()
                     running = False
                     
                 if event.type == pygame_gui.UI_BUTTON_PRESSED:
@@ -119,9 +131,62 @@ class Game:
         pygame.quit()
         
     def changeFrame(self, newFrame):
+        self.Frame.endFrame()
         del self.Frame
         self.Frame = newFrame()
+        
+class Save:
+    
+    path = f"save/{TITLE}.sfsave"
+    
+    data = {
+        "difficulty": 1,
+        "time": 0,
+        "money": 100000,
+        "inSpace": False,
+        "camera":{
+            "x": 0,
+            "y": 0
+        },
+        "travelers":
+        [
+            {
+                "x": 32,
+                "y": 32,
+                "firstname": "John",
+                "lastname": "Doe",
+                "skincolor": 6792175,
+            },
+            {
+                "x": 64,
+                "y": 64,
+                "firstname": "Jane",
+                "lastname": "Doe",
+                "skincolor": 16777215,
+            }
+        ],
+        "tiles": []
+    }
+    
+    def __init__(self):
+        if os.path.exists(self.path) == False:
+            self.save()
             
+        self.load()
+    
+    def save(self):
+        with open(self.path, "w") as savefile:
+            print("Saving...")
+            savefile.write(json.dumps(self.data, indent=4))
+            savefile.close()
+    
+    def load(self):
+        with open(self.path, "r") as savefile:
+            print("Loading...")
+            self.data = json.loads(savefile.read())
+            savefile.close()
+    
+
 class GameFrame(Frame):
     Size = pygame.Vector2(2048, 2048)
     
@@ -139,6 +204,8 @@ class GameFrame(Frame):
     SelectBuildImage = pygame.image.load("assets/sprites/select_build.png")
     SelectDestroyImage = pygame.image.load("assets/sprites/select_destroy.png")
     
+    save = Save()
+    
     Mode = "interact" #interact, build, destroy
     InSpace = False
     Money = 100000
@@ -147,12 +214,68 @@ class GameFrame(Frame):
     
     def __init__(self):
         super().__init__()
-        #create 100 travelers at random positions for testing
-        for i in range(100):
-            traveler = Traveler()
-            traveler.Position = pygame.Vector2(random.randint(0, self.Size.x), random.randint(0, self.Size.y))
-            self.createEntity(traveler)
-        pass
+        self.LoadSave()
+            
+    def LoadSave(self):    
+        self.Money = self.save.data["money"]
+        self.InSpace = self.save.data["inSpace"]
+        self.Camera.Position = pygame.Vector2(self.save.data["camera"]["x"], self.save.data["camera"]["y"])
+        
+        #Travelers
+        for traveler in self.save.data["travelers"]:
+            newtraveler = Traveler()
+            newtraveler.Position = pygame.Vector2(traveler["x"], traveler["y"])
+            self.createEntity(newtraveler)
+            
+        #Tiles
+        for tile in self.save.data["tiles"]:
+            newtile = None
+            for tileclass in Tile.__subclasses__():
+                if tileclass.__name__ == tile["type"]:
+                    newtile = tileclass()
+                    break
+            if newtile != None:
+                newtile.Position = pygame.Vector2(tile["x"], tile["y"])
+                self.createEntity(newtile)
+                
+            
+        
+    def endFrame(self):
+        super().endFrame()
+        self.save.data["money"] = self.Money
+        self.save.data["inSpace"] = self.InSpace
+        
+        #Camera
+        self.save.data["camera"] = {
+            "x": self.Camera.Position.x,
+            "y": self.Camera.Position.y
+        }
+        
+        #Travelers
+        self.save.data["travelers"] = []
+        for entity in self.Entities:
+            if isinstance(entity, Traveler):
+                self.save.data["travelers"].append(
+                    {
+                        "x": entity.Position.x,
+                        "y": entity.Position.y,
+                        "firstname": entity.firstname,
+                        "lastname": entity.lastname,
+                        "skincolor": entity.skincolor
+                    })
+                
+        #Tiles
+        self.save.data["tiles"] = []
+        for entity in self.Entities:
+            if isinstance(entity, Tile):
+                self.save.data["tiles"].append(
+                    {
+                        "type": f"{entity.__class__.__name__}",
+                        "x": entity.Position.x,
+                        "y": entity.Position.y
+                    })
+        
+        self.save.save()
         
     def frameUpdate(self):
         super().frameUpdate()
@@ -477,6 +600,10 @@ class Floor(Tile):
 class Traveler(Entity):
     DrawOrder = 2
     Collidable = False
+    
+    firstname = "John"
+    lastname = "Doe"
+    skincolor = 16777215
     
     ai_state = 1 #0 = stopped, 1 = wandering, 2 = moving to destination
     destinationPosition = pygame.Vector2(0, 0)
