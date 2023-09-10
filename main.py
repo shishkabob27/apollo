@@ -242,6 +242,9 @@ class GameFrame(Frame):
         for traveler in self.save.data["travelers"]:
             newtraveler = Traveler()
             newtraveler.Position = pygame.Vector2(traveler["x"], traveler["y"])
+            newtraveler.firstname = traveler["firstname"]
+            newtraveler.lastname = traveler["lastname"]
+            newtraveler.skincolor = traveler["skincolor"]
             self.createEntity(newtraveler)
             
         #Tiles
