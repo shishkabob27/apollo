@@ -102,7 +102,7 @@ class Game:
         print("StellarFuse initialized")
 
     def run(self):
-        self.Frame = LoadingFrame(MainMenuFrame)
+        self.Frame = LoadingFrame(CharacterCreatorFrame)
         
         running = True
         while running:
@@ -159,7 +159,7 @@ class Game:
     def changeFrame(self, newFrame):
         self.Frame.endFrame()
         del self.Frame
-        self.Frame = newFrame()
+        self.Frame = LoadingFrame(newFrame)
         
     def ConsoleCommand(self, command):
         args = command.lower().split(" ")
@@ -312,26 +312,10 @@ class Save:
         "money": 100000,
         "inSpace": False,
         "camera":{
-            "x": 0,
-            "y": 0
+            "x": 1024 - SCREEN_WIDTH/2,
+            "y": 1024 - SCREEN_HEIGHT/2
         },
-        "travelers":
-        [
-            {
-                "x": 32,
-                "y": 32,
-                "firstname": "John",
-                "lastname": "Doe",
-                "skincolor": 6792175,
-            },
-            {
-                "x": 64,
-                "y": 64,
-                "firstname": "Jane",
-                "lastname": "Doe",
-                "skincolor": 16777215,
-            }
-        ],
+        "travelers":[],
         "tiles": []
     }
     
@@ -371,8 +355,6 @@ class GameFrame(Frame):
     SelectBuildImage = pygame.image.load("assets/sprites/select_build.png")
     SelectDestroyImage = pygame.image.load("assets/sprites/select_destroy.png")
     
-    save = Save()
-    
     Mode = "interact" #interact, build, destroy
     InSpace = False
     Money = 100000
@@ -384,6 +366,7 @@ class GameFrame(Frame):
     
     def __init__(self):
         super().__init__()
+        self.save = Save()
         self.LoadSave()
             
     def LoadSave(self):    
@@ -638,6 +621,116 @@ class GameFrame(Frame):
             for x in range(0, int(self.Size.x), 512):
                 for y in range(0, int(self.Size.y), 512):
                     screen.blit(self.GrassBackground, (x, y) - self.Camera.Position)
+
+class CharacterCreatorFrame(Frame):
+
+    def __init__(self):
+        super().__init__()
+        self.save = Save()
+        self.RandomizeTraveler()
+        pass
+    
+    def frameUpdate(self):
+        super().frameUpdate()
+        pass
+    
+    def createGUI(self):
+        super().createGUI()
+        self.page = 1
+        
+        self.gui_creatorwindow = pygame_gui.elements.UIWindow(pygame.Rect((SCREEN_WIDTH / 2 - 128, SCREEN_HEIGHT / 2 - 160), (256, 320)), game.guimanager, "Character Creator", resizable=False, draggable=False)
+        
+        #back and next buttons
+        self.gui_backbutton = pygame_gui.elements.UIButton(pygame.Rect((0, 276), (128, 24)), "Back", game.guimanager, self.gui_creatorwindow)
+        self.gui_nextbutton = pygame_gui.elements.UIButton(pygame.Rect((128, 276), (128, 24)), "Next", game.guimanager, self.gui_creatorwindow)
+        
+        self.gui_s1 = []
+        
+        self.gui_s1_difficultytext = pygame_gui.elements.UILabel(pygame.Rect((4, 0), (256, 22)), "Difficulty", game.guimanager, self.gui_creatorwindow)
+        self.gui_s1_difficulty = pygame_gui.elements.UIDropDownMenu(["Easy", "Normal", "Hard"], "Easy", pygame.Rect((0, 24), (254, 22)), game.guimanager, self.gui_creatorwindow)
+        
+        self.gui_s1.append(self.gui_s1_difficultytext)
+        self.gui_s1.append(self.gui_s1_difficulty)    
+        
+        self.gui_s2 = []
+        
+        #rendered behind gui???
+        self.travelersprite = pygame.image.load("assets/sprites/traveler_2.png").convert_alpha()
+        self.gui_s2_travelerimage = pygame_gui.elements.UIImage(pygame.Rect((400, 299), (32, 32)), self.travelersprite, game.guimanager, self.gui_creatorwindow)
+        
+        self.gui_s2_firstnametext = pygame_gui.elements.UILabel(pygame.Rect((4, 78), (256, 22)), "First Name", game.guimanager, self.gui_creatorwindow)
+        self.gui_s2_firstname = pygame_gui.elements.UITextEntryLine(pygame.Rect((0, 96), (254, 24)), game.guimanager, self.gui_creatorwindow)
+        
+        self.gui_s2_lastnametext = pygame_gui.elements.UILabel(pygame.Rect((4, 142), (256, 22)), "Last Name", game.guimanager, self.gui_creatorwindow)
+        self.gui_s2_lastname = pygame_gui.elements.UITextEntryLine(pygame.Rect((0, 160), (254, 24)), game.guimanager, self.gui_creatorwindow)
+        
+        self.gui_s2_randomizebutton = pygame_gui.elements.UIButton(pygame.Rect((0, 256), (254, 24)), "Randomize", game.guimanager, self.gui_creatorwindow)
+        
+        self.gui_s2.append(self.gui_s2_travelerimage)
+        self.gui_s2.append(self.gui_s2_firstname)
+        self.gui_s2.append(self.gui_s2_firstnametext)
+        self.gui_s2.append(self.gui_s2_lastname)
+        self.gui_s2.append(self.gui_s2_lastnametext)
+        self.gui_s2.append(self.gui_s2_randomizebutton)
+        
+    def RandomizeTraveler(self):
+        firstnames = []
+        lastnames = []
+        
+        with open("assets/text/fnames.txt", "r") as firstnamesfile:
+            firstnames = firstnamesfile.read().splitlines()
+            firstnamesfile.close()
+        
+        with open("assets/text/lnames.txt", "r") as lastnamesfile:
+            lastnames = lastnamesfile.read().splitlines()
+            lastnamesfile.close()
+        
+        self.gui_s2_firstname.set_text(f"{random.choice(firstnames)}")
+        self.gui_s2_lastname.set_text(f"{random.choice(lastnames)}")
+        
+    def updateGUI(self):
+        if self.page == 1:
+            for element in self.gui_s1:
+                element.show()
+        else:
+            for element in self.gui_s1:
+                element.hide()
+                
+        if self.page == 2:
+            for element in self.gui_s2:
+                element.show()
+        else:
+            for element in self.gui_s2:
+                element.hide()
+                
+        if self.page == 3:
+            self.SaveData()
+    
+    def GUIButtonPressed(self, button):
+        super().GUIButtonPressed(button)
+        
+        if button == self.gui_backbutton:
+            if self.page > 1:
+                self.page -= 1
+        elif button == self.gui_nextbutton:
+            if self.page < 3:
+                self.page += 1
+        elif button == self.gui_s2_randomizebutton:
+            self.RandomizeTraveler()
+            
+    def SaveData(self):
+        self.save.data["difficulty"] = self.gui_s1_difficulty.selected_option
+        self.save.data["travelers"] = []
+        self.save.data["travelers"].append(
+            {
+                "x": 1024,
+                "y": 1024,
+                "firstname": self.gui_s2_firstname.get_text(),
+                "lastname": self.gui_s2_lastname.get_text(),
+                "skincolor": 16777215
+            })
+        self.save.save()
+        game.changeFrame(GameFrame)
                 
 class LoadingFrame(Frame):
     newFrame = None
@@ -650,7 +743,7 @@ class LoadingFrame(Frame):
         super().frameUpdate()
         game.guimanager.clear_and_reset()
         asyncio.run(self.LoadAssets())
-        game.changeFrame(self.newFrame)
+        game.Frame = self.newFrame()
         
     def draw(self, screen):
         super().draw(screen)
@@ -693,7 +786,7 @@ class MainMenuFrame(Frame):
         super().GUIButtonPressed(button)
         
         if button == self.gui_playbutton:
-            game.Frame = LoadingFrame(GameFrame)
+            game.changeFrame(CharacterCreatorFrame)
         elif button == self.gui_quitbutton:
             pygame.event.post(pygame.event.Event(pygame.QUIT))
         
