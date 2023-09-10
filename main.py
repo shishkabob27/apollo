@@ -1,6 +1,7 @@
 import pygame
 import pygame_gui
 import os
+import sys
 import random
 import platform
 import asyncio
@@ -543,7 +544,9 @@ class Traveler(Entity):
                         self.Position.x += 1
                         
                     break
-        
 
+if getattr(sys, 'frozen', False):
+    os.chdir(sys._MEIPASS)
+    
 game = Game()
 game.run()
