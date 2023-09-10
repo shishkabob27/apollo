@@ -155,6 +155,7 @@ class Save:
     data = {
         "difficulty": 1,
         "time": 0,
+        "ticks": 0,
         "money": 100000,
         "inSpace": False,
         "camera":{
@@ -223,6 +224,8 @@ class GameFrame(Frame):
     InSpace = False
     Money = 100000
     
+    TickCount = 0
+    
     SelectedTile = None
     
     def __init__(self):
@@ -232,6 +235,7 @@ class GameFrame(Frame):
     def LoadSave(self):    
         self.Money = self.save.data["money"]
         self.InSpace = self.save.data["inSpace"]
+        self.TickCount = self.save.data["ticks"]
         self.Camera.Position = pygame.Vector2(self.save.data["camera"]["x"], self.save.data["camera"]["y"])
         
         #Travelers
@@ -257,6 +261,7 @@ class GameFrame(Frame):
         super().endFrame()
         self.save.data["money"] = self.Money
         self.save.data["inSpace"] = self.InSpace
+        self.save.data["ticks"] = self.TickCount
         
         #Camera
         self.save.data["camera"] = {
@@ -373,6 +378,14 @@ class GameFrame(Frame):
                             entity.Destroy()
                             self.AddMoney(Tile.Cost * 0.5)
                             break
+    
+    def Tick(self):
+        super().Tick()
+        self.TickCount += 1
+        
+        if self.TickCount % 300 == 0 and self.InSpace == False:
+            self.AddMoney(10000)
+            pygame.mixer.Sound("assets/sounds/cash.mp3").play().set_volume(0.1)
         
     def AddMoney(self, amount):
         self.Money += amount
