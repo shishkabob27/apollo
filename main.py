@@ -107,7 +107,7 @@ class Game:
         print("StellarFuse initialized")
 
     def run(self):
-        self.Frame = LoadingFrame(CharacterCreatorFrame)
+        self.Frame = LoadingFrame(GameFrame)
         
         self.discordrpc = Presence("1150522780429848716")
         
@@ -431,7 +431,7 @@ class GameFrame(Frame):
             newtraveler.Position = pygame.Vector2(traveler["x"], traveler["y"])
             newtraveler.firstname = traveler["firstname"]
             newtraveler.lastname = traveler["lastname"]
-            newtraveler.skincolor = traveler["skincolor"]
+            newtraveler.skincolor = (int(traveler["skincolor"]["r"]), int(traveler["skincolor"]["g"]), int(traveler["skincolor"]["b"]))
             self.createEntity(newtraveler)
             
         #Tiles
@@ -470,7 +470,11 @@ class GameFrame(Frame):
                         "y": entity.Position.y,
                         "firstname": entity.firstname,
                         "lastname": entity.lastname,
-                        "skincolor": entity.skincolor
+                        "skincolor": {
+                            "r": entity.skincolor[0],
+                            "g": entity.skincolor[1],
+                            "b": entity.skincolor[2]
+                        }
                     })
                 
         #Tiles
@@ -776,7 +780,11 @@ class CharacterCreatorFrame(Frame):
                 "y": 1024,
                 "firstname": self.gui_s2_firstname.get_text(),
                 "lastname": self.gui_s2_lastname.get_text(),
-                "skincolor": 16777215
+                "skincolor":{
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                }
             })
         self.save.save()
         game.changeFrame(GameFrame)
@@ -872,7 +880,7 @@ class Entity:
             return
         
         try:
-            self.sprite.image = pygame.image.load(newtexture).convert()
+            self.sprite.image = pygame.image.load(newtexture).convert_alpha()
             self.texture = newtexture
         except:
             print(f"Texture {self.texture} does not exist!")
@@ -882,6 +890,9 @@ class Entity:
     def draw(self, screen):
         if self.Visible:
             if self.Position.x + self.Size.x > game.Frame.Camera.Position.x and self.Position.x < game.Frame.Camera.Position.x + SCREEN_WIDTH and self.Position.y + self.Size.y > game.Frame.Camera.Position.y and self.Position.y < game.Frame.Camera.Position.y + SCREEN_HEIGHT:
+                #if ent is traveler, draw sprite with skincolor tint
+                if isinstance(self, Traveler):
+                    self.sprite.image.fill((self.skincolor), special_flags=pygame.BLEND_RGB_MULT)
                 screen.blit(self.sprite.image, self.Position - game.Frame.Camera.Position)
         
     def frameUpdate(self):
@@ -935,7 +946,7 @@ class Traveler(Entity):
     
     firstname = "John"
     lastname = "Doe"
-    skincolor = 16777215
+    skincolor = (255, 255, 255)
     
     ai_state = 1 #0 = stopped, 1 = wandering, 2 = moving to destination
     destinationPosition = pygame.Vector2(0, 0)
