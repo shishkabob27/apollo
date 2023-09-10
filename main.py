@@ -84,6 +84,8 @@ class Game:
     
     timesincelasttick = 0
     
+    gui_console = None
+    
     def __init__(self):
         pygame.init()
         pygame.font.init()
@@ -100,7 +102,7 @@ class Game:
         print("StellarFuse initialized")
 
     def run(self):
-        self.Frame = LoadingFrame(GameFrame)
+        self.Frame = LoadingFrame(MainMenuFrame)
         
         running = True
         while running:
@@ -113,9 +115,20 @@ class Game:
                         self.Frame.endFrame()
                         self.Frame.endGame()
                     running = False
+
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_F1:
+                    #destroy or create console gui
+                    if self.gui_console != None:
+                        self.gui_console.kill()
+                        self.gui_console = None
+                    else:
+                        self.gui_console =  pygame_gui.windows.UIConsoleWindow(rect=pygame.rect.Rect((SCREEN_WIDTH-360, 0), (360, 240)), manager=self.guimanager)
                     
                 if event.type == pygame_gui.UI_BUTTON_PRESSED:
                     self.Frame.GUIButtonPressed(event.ui_element)
+                elif event.type == pygame_gui.UI_CONSOLE_COMMAND_ENTERED and event.ui_element == self.gui_console:
+                    self.ConsoleCommand(event.command)
+                    
                 self.guimanager.process_events(event)
             
             if self.Frame != None:
@@ -147,6 +160,146 @@ class Game:
         self.Frame.endFrame()
         del self.Frame
         self.Frame = newFrame()
+        
+    def ConsoleCommand(self, command):
+        args = command.lower().split(" ")
+        
+        if args[0] == "help":
+            game.gui_console.add_output_line_to_log("Commands:")
+            game.gui_console.add_output_line_to_log("help - shows this help message")
+            game.gui_console.add_output_line_to_log("clear - clears the console")
+            game.gui_console.add_output_line_to_log("exit - exits the game")
+            game.gui_console.add_output_line_to_log("changeframe <frame> - changes the level")
+            game.gui_console.add_output_line_to_log("setmoney <amount> - sets the player's money")
+            game.gui_console.add_output_line_to_log("addmoney <amount> - adds money to the player's money")
+            game.gui_console.add_output_line_to_log("removemoney <amount> - removes money from the player's money")
+            game.gui_console.add_output_line_to_log("setmode <mode> - sets the player's mode")
+            game.gui_console.add_output_line_to_log("setticks <ticks> - sets the ticks")
+            game.gui_console.add_output_line_to_log("setdifficulty <difficulty> - sets the difficulty")
+            game.gui_console.add_output_line_to_log("setinspace <true/false> - sets if the player is in space")
+            game.gui_console.add_output_line_to_log("setcamera <x> <y> - sets the camera position")
+        elif args[0] == "clear":
+            self.gui_console.clear_log()
+        elif args[0] == "exit":
+            pygame.event.post(pygame.event.Event(pygame.QUIT))
+        elif args[0] == "changeframe":
+            if args.__len__() < 2:
+                game.gui_console.add_output_line_to_log("Error: Missing argument")
+                return
+            
+            for frame in Frame.__subclasses__():
+                if frame.__name__.lower() == args[1]:
+                    game.Frame = LoadingFrame(frame)
+                    return
+            game.gui_console.add_output_line_to_log("Error: Unknown frame")
+        elif args[0] == "setmoney":
+            if args.__len__() < 2:
+                game.gui_console.add_output_line_to_log("Error: Missing argument")
+                return
+            
+            if args[1].isnumeric() == False:
+                game.gui_console.add_output_line_to_log(f"Error: Argument is not a number")
+                return
+                
+            if game.Frame.__class__ == GameFrame:
+                game.Frame.Money = int(args[1])
+            else:
+                game.gui_console.add_output_line_to_log("Error: Frame is not GameFrame")
+        elif args[0] == "addmoney":
+            if args.__len__() < 2:
+                game.gui_console.add_output_line_to_log("Error: Missing argument")
+                return
+            
+            if args[1].isnumeric() == False:
+                game.gui_console.add_output_line_to_log(f"Error: Argument is not a number")
+                return
+                
+            if game.Frame.__class__ == GameFrame:
+                game.Frame.Money += int(args[1])
+            else:
+                game.gui_console.add_output_line_to_log("Error: Frame is not GameFrame")
+        elif args[0] == "removemoney":
+            if args.__len__() < 2:
+                game.gui_console.add_output_line_to_log("Error: Missing argument")
+                return
+            
+            if args[1].isnumeric() == False:
+                game.gui_console.add_output_line_to_log(f"Error: Argument is not a number")
+                return
+                
+            if game.Frame.__class__ == GameFrame:
+                game.Frame.Money -= int(args[1])
+            else:
+                game.gui_console.add_output_line_to_log("Error: Frame is not GameFrame")
+        elif args[0] == "setmode":
+            if args.__len__() < 2:
+                game.gui_console.add_output_line_to_log("Error: Missing argument")
+                return
+                
+            if game.Frame.__class__ == GameFrame:
+                game.Frame.SetMode(args[1])
+            else:
+                game.gui_console.add_output_line_to_log("Error: Frame is not GameFrame")
+                
+        elif args[0] == "setticks":
+            if args.__len__() < 2:
+                game.gui_console.add_output_line_to_log("Error: Missing argument")
+                return
+            
+            if args[1].isnumeric() == False:
+                game.gui_console.add_output_line_to_log(f"Error: Argument is not a number")
+                return
+                
+            if game.Frame.__class__ == GameFrame:
+                game.Frame.TickCount = int(args[1])
+            else:
+                game.gui_console.add_output_line_to_log("Error: Frame is not GameFrame")
+        elif args[0] == "setdifficulty":
+            if args.__len__() < 2:
+                game.gui_console.add_output_line_to_log("Error: Missing argument")
+                return
+            
+            if args[1].isnumeric() == False:
+                game.gui_console.add_output_line_to_log(f"Error: Argument is not a number")
+                return
+                
+            if game.Frame.__class__ == GameFrame:
+                game.Frame.Difficulty = int(args[1])
+            else:
+                game.gui_console.add_output_line_to_log("Error: Frame is not GameFrame")
+        elif args[0] == "setinspace":
+            if args.__len__() < 2:
+                game.gui_console.add_output_line_to_log("Error: Missing argument")
+                return
+                
+            if args[1] == "true":
+                if game.Frame.__class__ == GameFrame:
+                    game.Frame.InSpace = True
+                else:
+                    game.gui_console.add_output_line_to_log("Error: Frame is not GameFrame")
+            elif args[1] == "false":
+                if game.Frame.__class__ == GameFrame:
+                    game.Frame.InSpace = False
+                else:
+                    game.gui_console.add_output_line_to_log("Error: Frame is not GameFrame")
+            else:
+                game.gui_console.add_output_line_to_log("Error: Argument is not true or false")
+        elif args[0] == "setcamera":
+            if args.__len__() < 3:
+                game.gui_console.add_output_line_to_log("Error: Missing argument")
+                return
+            
+            if args[1].isnumeric() == False or args[2].isnumeric() == False:
+                game.gui_console.add_output_line_to_log(f"Error: Argument is not a number")
+                return
+                
+            if game.Frame.__class__ == GameFrame:
+                game.Frame.Camera.Position = pygame.Vector2(int(args[1]), int(args[2]))
+            else:
+                game.gui_console.add_output_line_to_log("Error: Frame is not GameFrame")
+        else:
+            game.gui_console.add_output_line_to_log("Unknown command")
+        
         
 class Save:
     
@@ -223,6 +376,7 @@ class GameFrame(Frame):
     Mode = "interact" #interact, build, destroy
     InSpace = False
     Money = 100000
+    Difficulty = 1
     
     TickCount = 0
     
@@ -235,6 +389,7 @@ class GameFrame(Frame):
     def LoadSave(self):    
         self.Money = self.save.data["money"]
         self.InSpace = self.save.data["inSpace"]
+        self.Difficulty = self.save.data["difficulty"]
         self.TickCount = self.save.data["ticks"]
         self.Camera.Position = pygame.Vector2(self.save.data["camera"]["x"], self.save.data["camera"]["y"])
         
