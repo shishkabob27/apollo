@@ -429,6 +429,7 @@ class GameFrame(Frame):
         super().__init__()
         self.save = Save()
         self.LoadSave()
+        self.SelectedTile = Wall
             
     def LoadSave(self):    
         self.Money = self.save.data["money"]
@@ -611,9 +612,10 @@ class GameFrame(Frame):
         self.gui_bottombar_build = pygame_gui.elements.UIButton(pygame.Rect((SCREEN_WIDTH - 192, 0), (94, 18)), "Build", game.guimanager, self.gui_bottombar)
         self.gui_bottombar_destroy = pygame_gui.elements.UIButton(pygame.Rect((SCREEN_WIDTH - 96, 0), (94, 18)), "Destroy", game.guimanager, self.gui_bottombar)
         
+        self.gui_tile_selected = pygame_gui.elements.UILabel(pygame.Rect((4, 0), (196, 22)), "Selected: None", game.guimanager, self.gui_sidebar)
         #create button for each tile
         self.tilebuttons = []
-        button_offset = 2
+        button_offset = 22
         for tile in Tile.__subclasses__():
             self.tilebuttons.append(pygame_gui.elements.UIButton(pygame.Rect((2, button_offset), (96, 16)), tile.Name, game.guimanager, self.gui_sidebar))
             button_offset += 18
@@ -636,10 +638,13 @@ class GameFrame(Frame):
       
         if self.Mode == "build":
             self.gui_sidebar.title_bar.set_text("Build")
+            self.gui_tile_selected.show()
+            self.gui_tile_selected.set_text(f"Selected: {self.SelectedTile.Name}")
             
             for button in self.tilebuttons:
                 button.show()
         else:
+            self.gui_tile_selected.hide()
             for button in self.tilebuttons:
                 button.hide()
             
