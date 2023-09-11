@@ -107,9 +107,10 @@ class Game:
         print("StellarFuse initialized")
 
     def run(self):
-        self.Frame = LoadingFrame(GameFrame)
+        self.Frame = LoadingFrame(MainMenuFrame)
         
-        self.discordrpc = Presence("1150522780429848716")
+        if not DEBUG:
+            self.discordrpc = Presence("1150522780429848716")
         
         running = True
         while running:
@@ -163,7 +164,7 @@ class Game:
             
             #Discord Rich Presence
             self.timesincerichpresenceupdate += self.clock.get_time() / 1000
-            if self.timesincerichpresenceupdate >= 10:
+            if self.timesincerichpresenceupdate >= 10 and DEBUG == False:
                 self.timesincerichpresenceupdate = 0
                 if self.Frame.__class__ == MainMenuFrame:
                     self.discordrpc.set(
@@ -709,13 +710,20 @@ class CharacterCreatorFrame(Frame):
         
         #rendered behind gui???
         self.travelersprite = pygame.image.load("assets/sprites/traveler_2.png").convert_alpha()
-        self.gui_s2_travelerimage = pygame_gui.elements.UIImage(pygame.Rect((400, 299), (32, 32)), self.travelersprite, game.guimanager, self.gui_creatorwindow)
+
+        self.gui_s2_travelerimage = pygame_gui.elements.UIImage(pygame.Rect((96+16, 8), (32, 32)), self.travelersprite, game.guimanager, container=self.gui_creatorwindow)
         
-        self.gui_s2_firstnametext = pygame_gui.elements.UILabel(pygame.Rect((4, 78), (256, 22)), "First Name", game.guimanager, self.gui_creatorwindow)
-        self.gui_s2_firstname = pygame_gui.elements.UITextEntryLine(pygame.Rect((0, 96), (254, 24)), game.guimanager, self.gui_creatorwindow)
+        self.gui_s2_firstnametext = pygame_gui.elements.UILabel(pygame.Rect((4, 32), (256, 22)), "First Name", game.guimanager, self.gui_creatorwindow)
+        self.gui_s2_firstname = pygame_gui.elements.UITextEntryLine(pygame.Rect((0, 48), (254, 24)), game.guimanager, self.gui_creatorwindow)
         
-        self.gui_s2_lastnametext = pygame_gui.elements.UILabel(pygame.Rect((4, 142), (256, 22)), "Last Name", game.guimanager, self.gui_creatorwindow)
-        self.gui_s2_lastname = pygame_gui.elements.UITextEntryLine(pygame.Rect((0, 160), (254, 24)), game.guimanager, self.gui_creatorwindow)
+        self.gui_s2_lastnametext = pygame_gui.elements.UILabel(pygame.Rect((4, 68), (256, 22)), "Last Name", game.guimanager, self.gui_creatorwindow)
+        self.gui_s2_lastname = pygame_gui.elements.UITextEntryLine(pygame.Rect((0, 84), (254, 24)), game.guimanager, self.gui_creatorwindow)
+        
+        self.gui_s2_skincolortext = pygame_gui.elements.UILabel(pygame.Rect((4, 142), (256, 22)), "Skin Color", game.guimanager, self.gui_creatorwindow)
+        self.gui_s2_skincolor = pygame_gui.elements.UIPanel(pygame.Rect((0, 164), (254, 96)), 0, game.guimanager, container=self.gui_creatorwindow)
+        self.gui_s2_skincolor.r = pygame_gui.elements.UIHorizontalSlider(pygame.Rect((0, 0), (254, 24)), 255, (0, 255), game.guimanager, self.gui_s2_skincolor)
+        self.gui_s2_skincolor.g = pygame_gui.elements.UIHorizontalSlider(pygame.Rect((0, 24), (254, 24)), 255, (0, 255), game.guimanager, self.gui_s2_skincolor)
+        self.gui_s2_skincolor.b = pygame_gui.elements.UIHorizontalSlider(pygame.Rect((0, 48), (254, 24)), 255, (0, 255), game.guimanager, self.gui_s2_skincolor)
         
         self.gui_s2_randomizebutton = pygame_gui.elements.UIButton(pygame.Rect((0, 256), (254, 24)), "Randomize", game.guimanager, self.gui_creatorwindow)
         
@@ -725,6 +733,11 @@ class CharacterCreatorFrame(Frame):
         self.gui_s2.append(self.gui_s2_lastname)
         self.gui_s2.append(self.gui_s2_lastnametext)
         self.gui_s2.append(self.gui_s2_randomizebutton)
+        self.gui_s2.append(self.gui_s2_skincolor)
+        self.gui_s2.append(self.gui_s2_skincolor.r)
+        self.gui_s2.append(self.gui_s2_skincolor.g)
+        self.gui_s2.append(self.gui_s2_skincolor.b)
+        
         
     def RandomizeTraveler(self):
         firstnames = []
@@ -741,6 +754,10 @@ class CharacterCreatorFrame(Frame):
         self.gui_s2_firstname.set_text(f"{random.choice(firstnames)}")
         self.gui_s2_lastname.set_text(f"{random.choice(lastnames)}")
         
+        self.gui_s2_skincolor.r.set_current_value(random.randint(0, 255))
+        self.gui_s2_skincolor.g.set_current_value(random.randint(0, 255))
+        self.gui_s2_skincolor.b.set_current_value(random.randint(0, 255))
+        
     def updateGUI(self):
         if self.page == 1:
             for element in self.gui_s1:
@@ -755,7 +772,10 @@ class CharacterCreatorFrame(Frame):
         else:
             for element in self.gui_s2:
                 element.hide()
-                
+        
+        self.gui_s2_travelerimage.image = self.travelersprite.copy()
+        self.gui_s2_travelerimage.image.fill((self.gui_s2_skincolor.r.get_current_value(), self.gui_s2_skincolor.g.get_current_value(), self.gui_s2_skincolor.b.get_current_value()), special_flags=pygame.BLEND_RGB_MULT)
+
         if self.page == 3:
             self.SaveData()
     
@@ -781,9 +801,9 @@ class CharacterCreatorFrame(Frame):
                 "firstname": self.gui_s2_firstname.get_text(),
                 "lastname": self.gui_s2_lastname.get_text(),
                 "skincolor":{
-                    "r": 255,
-                    "g": 255,
-                    "b": 255
+                    "r": self.gui_s2_skincolor.r.get_current_value(),
+                    "g": self.gui_s2_skincolor.g.get_current_value(),
+                    "b": self.gui_s2_skincolor.b.get_current_value()
                 }
             })
         self.save.save()
@@ -891,9 +911,10 @@ class Entity:
         if self.Visible:
             if self.Position.x + self.Size.x > game.Frame.Camera.Position.x and self.Position.x < game.Frame.Camera.Position.x + SCREEN_WIDTH and self.Position.y + self.Size.y > game.Frame.Camera.Position.y and self.Position.y < game.Frame.Camera.Position.y + SCREEN_HEIGHT:
                 #if ent is traveler, draw sprite with skincolor tint
+                sprite = self.sprite.image.copy()
                 if isinstance(self, Traveler):
-                    self.sprite.image.fill((self.skincolor), special_flags=pygame.BLEND_RGB_MULT)
-                screen.blit(self.sprite.image, self.Position - game.Frame.Camera.Position)
+                    sprite.fill((self.skincolor), special_flags=pygame.BLEND_RGB_MULT)
+                screen.blit(sprite, self.Position - game.Frame.Camera.Position)
         
     def frameUpdate(self):
         if self.LockedInBounds:
