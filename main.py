@@ -717,7 +717,7 @@ class CharacterCreatorFrame(Frame):
         self.gui_s2_skincolor.g = pygame_gui.elements.UIHorizontalSlider(pygame.Rect((0, 24), (254, 24)), 255, (0, 255), game.guimanager, self.gui_s2_skincolor)
         self.gui_s2_skincolor.b = pygame_gui.elements.UIHorizontalSlider(pygame.Rect((0, 48), (254, 24)), 255, (0, 255), game.guimanager, self.gui_s2_skincolor)
         
-        self.gui_s2_randomizebutton = pygame_gui.elements.UIButton(pygame.Rect((0, 256), (254, 24)), "Randomize", game.guimanager, self.gui_creatorwindow)
+        self.gui_s2_randomizebutton = pygame_gui.elements.UIButton(pygame.Rect((0, 250), (254, 24)), "Randomize", game.guimanager, self.gui_creatorwindow)
         
         self.gui_s2.append(self.gui_s2_travelerimage)
         self.gui_s2.append(self.gui_s2_firstname)
@@ -726,6 +726,7 @@ class CharacterCreatorFrame(Frame):
         self.gui_s2.append(self.gui_s2_lastnametext)
         self.gui_s2.append(self.gui_s2_randomizebutton)
         self.gui_s2.append(self.gui_s2_skincolor)
+        self.gui_s2.append(self.gui_s2_skincolortext)
         self.gui_s2.append(self.gui_s2_skincolor.r)
         self.gui_s2.append(self.gui_s2_skincolor.g)
         self.gui_s2.append(self.gui_s2_skincolor.b)
