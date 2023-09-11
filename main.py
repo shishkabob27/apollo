@@ -146,8 +146,9 @@ class Game:
             else:
                 print("No frame loaded!")
                 
-            fpstext = pygame.font.SysFont("microsoftsansserif", 16).render(f"{round(self.clock.get_fps())}", False, "white")
-            self.screen.blit(fpstext, (0, 0))
+            if DEBUG:
+                fpstext = pygame.font.SysFont("microsoftsansserif", 16).render(f"{round(self.clock.get_fps())}", False, "white")
+                self.screen.blit(fpstext, (0, 0))
             
             self.guimanager.update(self.dt)
             self.guimanager.draw_ui(self.screen)
