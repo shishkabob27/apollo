@@ -362,6 +362,7 @@ class Save:
     data = {
         "difficulty": 1,
         "time": 0,
+        "day": 1,
         "ticks": 0,
         "money": 100000,
         "inSpace": False,
@@ -420,6 +421,8 @@ class GameFrame(Frame):
     
     TickCount = 0
     
+    Day = 1
+    
     SelectedTile = None
     
     def __init__(self):
@@ -432,6 +435,7 @@ class GameFrame(Frame):
         self.InSpace = self.save.data["inSpace"]
         self.Difficulty = self.save.data["difficulty"]
         self.TickCount = self.save.data["ticks"]
+        self.Day = self.save.data["day"]
         self.Camera.Position = pygame.Vector2(self.save.data["camera"]["x"], self.save.data["camera"]["y"])
         
         #Travelers
@@ -461,6 +465,7 @@ class GameFrame(Frame):
         self.save.data["money"] = self.Money
         self.save.data["inSpace"] = self.InSpace
         self.save.data["ticks"] = self.TickCount
+        self.save.data["day"] = self.Day
         self.save.data["time"] = round(self.save.data["time"], 2)
         
         #Camera
@@ -582,6 +587,7 @@ class GameFrame(Frame):
         self.TickCount += 1
         
         if self.TickCount % 300 == 0 and self.InSpace == False:
+            self.Day += 1
             self.AddMoney(10000)
             pygame.mixer.Sound("assets/sounds/cash.mp3").play().set_volume(0.1)
         
@@ -599,6 +605,7 @@ class GameFrame(Frame):
         self.gui_bottombar = pygame_gui.elements.UIPanel(pygame.Rect((0, SCREEN_HEIGHT - 20), (SCREEN_WIDTH, 20)), 0, game.guimanager)
         
         self.gui_moneytext = pygame_gui.elements.UILabel(pygame.Rect((2, 0), (96, 18)), f"${self.Money}", game.guimanager, self.gui_bottombar)
+        self.gui_daytext = pygame_gui.elements.UILabel(pygame.Rect((72, 0), (96, 18)), f"Day {self.Day}", game.guimanager, self.gui_bottombar)
         
         self.gui_bottombar_interact = pygame_gui.elements.UIButton(pygame.Rect((SCREEN_WIDTH - 288, 0), (94, 18)), "Interact", game.guimanager, self.gui_bottombar)
         self.gui_bottombar_build = pygame_gui.elements.UIButton(pygame.Rect((SCREEN_WIDTH - 192, 0), (94, 18)), "Build", game.guimanager, self.gui_bottombar)
@@ -641,9 +648,8 @@ class GameFrame(Frame):
         else:
             self.gui_sidebar.show()
             
-        
-        
         self.gui_moneytext.set_text(f"${self.Money:.0f}")
+        self.gui_daytext.set_text(f"Day {self.Day}")
         
     def SetMode(self, mode):
         self.Mode = mode
