@@ -131,6 +131,7 @@ class Game:
                         self.gui_console = None
                     else:
                         self.gui_console =  pygame_gui.windows.UIConsoleWindow(rect=pygame.rect.Rect((SCREEN_WIDTH-360, 0), (360, 240)), manager=self.guimanager)
+                        self.gui_console.command_entry.focus()
                     
                 if event.type == pygame_gui.UI_BUTTON_PRESSED:
                     self.Frame.GUIButtonPressed(event.ui_element)
