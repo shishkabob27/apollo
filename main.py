@@ -902,7 +902,7 @@ class Entity:
 
     def draw(self, screen):
         if self.Visible:
-            if self.Position.x + self.Size.x > game.Frame.Camera.Position.x and self.Position.x < game.Frame.Camera.Position.x + SCREEN_WIDTH and self.Position.y + self.Size.y > game.Frame.Camera.Position.y and self.Position.y < game.Frame.Camera.Position.y + SCREEN_HEIGHT:
+            if Utils.IsOnScreen(self.Position, self.Size):
                 #if ent is traveler, draw sprite with skincolor tint
                 sprite = self.sprite.image.copy()
                 if isinstance(self, Traveler):
@@ -967,6 +967,20 @@ class Traveler(Entity):
     
     def __init__(self):
         super().__init__()
+        
+    def draw(self, screen):
+        super().draw(screen)
+        
+        if Utils.IsOnScreen(self.Position) and Utils.IsMouseHovering(self):
+            nameText = pygame.font.SysFont("microsoftsansserif", 9).render(f"{self.firstname} {self.lastname}", False, "white")
+            nameTextShadow = pygame.font.SysFont("microsoftsansserif", 9).render(f"{self.firstname} {self.lastname}", False, "black")
+            screen.blit(nameTextShadow, (self.Position.x + self.Size.x / 2 - nameText.get_width() / 2 - game.Frame.Camera.Position.x + 1, self.Position.y - 24 - game.Frame.Camera.Position.y + 1))
+            screen.blit(nameText, (self.Position.x + self.Size.x / 2 - nameText.get_width() / 2 - game.Frame.Camera.Position.x, self.Position.y - 24 - game.Frame.Camera.Position.y))
+            
+            healthText = pygame.font.SysFont("microsoftsansserif", 9).render(f"{self.Health} HP", False, "white")
+            healthTextShadow = pygame.font.SysFont("microsoftsansserif", 9).render(f"{self.Health} HP", False, "black")
+            screen.blit(healthTextShadow, (self.Position.x + self.Size.x / 2 - healthText.get_width() / 2 - game.Frame.Camera.Position.x + 1, self.Position.y - 12 - game.Frame.Camera.Position.y + 1))
+            screen.blit(healthText, (self.Position.x + self.Size.x / 2 - healthText.get_width() / 2 - game.Frame.Camera.Position.x, self.Position.y - 12 - game.Frame.Camera.Position.y))
         
     def frameUpdate(self):
         super().frameUpdate()
@@ -1036,6 +1050,19 @@ class Traveler(Entity):
 
 if getattr(sys, 'frozen', False):
     os.chdir(sys._MEIPASS)
+    
+class Utils:
+    def IsOnScreen(position, size=(32, 32)):
+        if position.x + size[0] > game.Frame.Camera.Position.x and position.x < game.Frame.Camera.Position.x + SCREEN_WIDTH and position.y + size[1] > game.Frame.Camera.Position.y and position.y < game.Frame.Camera.Position.y + SCREEN_HEIGHT:
+            return True
+        else:
+            return False
+        
+    def IsMouseHovering(entity):
+        if pygame.mouse.get_pos()[0] + game.Frame.Camera.Position.x > entity.Position.x and pygame.mouse.get_pos()[0] + game.Frame.Camera.Position.x < entity.Position.x + entity.Size.x and pygame.mouse.get_pos()[1] + game.Frame.Camera.Position.y > entity.Position.y and pygame.mouse.get_pos()[1] + game.Frame.Camera.Position.y < entity.Position.y + entity.Size.y:
+            return True
+        else:
+            return False
     
 game = Game()
 game.run()
