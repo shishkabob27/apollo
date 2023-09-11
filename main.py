@@ -380,6 +380,10 @@ class Save:
         self.load()
     
     def save(self):
+        #create save directory if it doesnt exist
+        if os.path.exists("save") == False:
+            os.mkdir("save")
+
         with open(self.path, "w") as savefile:
             print("Saving...")
             savefile.write(json.dumps(self.data, indent=4))
