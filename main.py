@@ -563,19 +563,11 @@ class GameFrame(Frame):
                         self.createEntity(tile)
                         self.RemoveMoney(Tile.Cost)
             elif self.Mode == "destroy":
-                #check if tile is occupied
-                tileOccupied = False
                 for entity in self.Entities:
                     if entity.Position == mousepos:
-                        tileOccupied = True
-                        break
-                if tileOccupied:
-                    #destroy tile at mouse position
-                    for entity in self.Entities:
-                        if entity.Position == mousepos:
+                        if isinstance(entity, Tile):
                             entity.Destroy()
                             self.AddMoney(Tile.Cost * 0.5)
-                            break
     
     def Tick(self):
         super().Tick()
