@@ -377,8 +377,6 @@ class Save:
     def __init__(self):
         if os.path.exists(self.path) == False:
             self.save()
-            
-        self.load()
     
     def save(self):
         #create save directory if it doesnt exist
@@ -395,6 +393,12 @@ class Save:
             print("Loading...")
             self.data = json.loads(savefile.read())
             savefile.close()
+            
+    def Exists(self):
+        return os.path.exists(self.path)
+    
+    def Delete(self):
+        os.remove(self.path)
     
 
 class GameFrame(Frame):
@@ -428,6 +432,7 @@ class GameFrame(Frame):
     def __init__(self):
         super().__init__()
         self.save = Save()
+        self.save.load()
         self.LoadSave()
         self.SelectedTile = Wall
             
@@ -868,14 +873,17 @@ class MainMenuFrame(Frame):
     def createGUI(self):
         super().createGUI()
         self.gui_title = pygame_gui.elements.UILabel(pygame.Rect((SCREEN_WIDTH - 64, 0), (64, 32)), f"{TITLE}", game.guimanager)
-        self.gui_playbutton = pygame_gui.elements.UIButton(pygame.Rect((2, SCREEN_HEIGHT- 52), (96, 24)), "Play", game.guimanager)
+        self.gui_newgamebutton = pygame_gui.elements.UIButton(pygame.Rect((2, SCREEN_HEIGHT- 78), (96, 24)), "New Game", game.guimanager)
+        self.gui_loadgamebutton = pygame_gui.elements.UIButton(pygame.Rect((2, SCREEN_HEIGHT- 52), (96, 24)), "Load Game", game.guimanager)
         self.gui_quitbutton = pygame_gui.elements.UIButton(pygame.Rect((2, SCREEN_HEIGHT- 26), (96, 24)), "Quit", game.guimanager)
         
     def GUIButtonPressed(self, button):
         super().GUIButtonPressed(button)
         
-        if button == self.gui_playbutton:
+        if button == self.gui_newgamebutton:
             game.changeFrame(CharacterCreatorFrame)
+        elif button == self.gui_loadgamebutton:
+            game.changeFrame(GameFrame)
         elif button == self.gui_quitbutton:
             pygame.event.post(pygame.event.Event(pygame.QUIT))
         
