@@ -99,6 +99,8 @@ class Game:
             pygame.display.set_caption(f"{TITLE} | {VERSION} | {platform.system()} {platform.release()}")
         else:
             pygame.display.set_caption(f"{TITLE} | {VERSION}")
+            
+        pygame.display.set_icon(pygame.image.load("assets/sprites/apollo_icon_alt.png"))
         
         self.screen = pygame.display.set_mode(SCREEN_SIZE, pygame.RESIZABLE | pygame.DOUBLEBUF | pygame.SCALED)
         self.clock = pygame.time.Clock()
