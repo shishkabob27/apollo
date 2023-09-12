@@ -711,6 +711,12 @@ class CharacterCreatorFrame(Frame):
         super().__init__()
         self.save = Save()
         self.RandomizeTraveler()
+        
+        for i in range(0, 500):
+            star = Star()
+            star.speed = random.randint(1, 3)
+            self.createEntity(star)
+            
         pass
     
     def frameUpdate(self):
@@ -970,6 +976,25 @@ class Entity:
     
     def Destroy(self):
         game.Frame.destroyEntity(self)
+        
+class Star(Entity):
+
+    def __init__(self):
+        super().__init__()
+        self.setTexture("assets/sprites/star.png")
+        self.Position = pygame.Vector2(random.randint(0, SCREEN_WIDTH), random.randint(0, SCREEN_HEIGHT))
+        self.Size = pygame.Vector2(3, 3)
+        self.speed = 1
+        
+    def frameUpdate(self):
+        super().frameUpdate()
+        self.Position.x -= self.speed
+        if self.Position.x < 0:
+            self.Position.x = SCREEN_WIDTH
+            self.Position.y = random.randint(0, game.Frame.Size.y)
+            
+    def draw(self, screen):
+        screen.blit(self.sprite.image, self.Position)
 
 class Tile(Entity):
     DrawOrder = 0
