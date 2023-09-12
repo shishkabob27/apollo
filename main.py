@@ -95,9 +95,9 @@ class Game:
         pygame.font.init()
         
         if DEBUG:
-            pygame.display.set_caption(f"{TITLE} | {VERSION} | {platform.system()} {platform.release()}")
+            pygame.display.set_caption(f"{TITLE} | {VERSION} - {VERSION_NAME} | {platform.system()} {platform.release()}")
         else:
-            pygame.display.set_caption(f"{TITLE} | {VERSION}")
+            pygame.display.set_caption(f"{TITLE} | {VERSION} - {VERSION_NAME}")
             
         pygame.display.set_icon(pygame.image.load("assets/sprites/apollo_icon_alt.png"))
         
