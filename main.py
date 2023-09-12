@@ -360,6 +360,13 @@ class Save:
     path = f"save/{TITLE}.sfsave"
     
     data = {
+        "version": VERSION,
+        "options": {
+            "fullscreen": False,
+            "vsync": False,
+            "sfxvolume": 1,
+            "musicvolume": 1,
+        },
         "difficulty": 1,
         "time": 0,
         "day": 1,
@@ -371,7 +378,9 @@ class Save:
             "y": 1024 - SCREEN_HEIGHT/2
         },
         "travelers":[],
-        "tiles": []
+        "ship": {
+            "tiles":[]
+        }
     }
     
     def __init__(self):
@@ -454,7 +463,7 @@ class GameFrame(Frame):
             self.createEntity(newtraveler)
             
         #Tiles
-        for tile in self.save.data["tiles"]:
+        for tile in self.save.data["ship"]["tiles"]:
             newtile = None
             for tileclass in Tile.__subclasses__():
                 if tileclass.__name__ == tile["type"]:
@@ -498,10 +507,10 @@ class GameFrame(Frame):
                     })
                 
         #Tiles
-        self.save.data["tiles"] = []
+        self.save.data["ship"]["tiles"] = []
         for entity in self.Entities:
             if isinstance(entity, Tile):
-                self.save.data["tiles"].append(
+                self.save.data["ship"]["tiles"].append(
                     {
                         "type": f"{entity.__class__.__name__}",
                         "x": entity.Position.x,
