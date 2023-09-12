@@ -15,8 +15,9 @@ from macros import *
 global game
 
 class Camera:
-    Position = pygame.Vector2(0, 0)
+    
     def __init__(self):
+        self.Position = pygame.Vector2(0, 0)
         pass
     
     def frameUpdate(self):
@@ -34,15 +35,12 @@ class Camera:
             self.Position.y = game.Frame.Size.y - SCREEN_HEIGHT
 
 class Frame:
-    Entities = []
-    Size = pygame.Vector2(SCREEN_WIDTH, SCREEN_HEIGHT)
-    Camera = Camera()
-    
-    CachedFiles = []
-    
+
     def __init__(self):
+        self.Entities = []
+        self.Size = pygame.Vector2(SCREEN_WIDTH, SCREEN_HEIGHT)
+        self.Camera = Camera()
         self.createGUI()
-        pass
     
     def createEntity(self, entity):
         self.Entities.append(entity)
@@ -82,16 +80,17 @@ class Frame:
         pass
         
 class Game:
-    Frame = None
-    dt = 0
-    
-    timesincelasttick = 0
-    unixtimewhenframestarted = int(time.time())
-    timesincerichpresenceupdate = 10
-    
-    gui_console = None
     
     def __init__(self):
+        self.Frame = None
+        self.dt = 0
+
+        self.timesincelasttick = 0
+        self.unixtimewhenframestarted = int(time.time())
+        self.timesincerichpresenceupdate = 10
+        
+        self.gui_console = None
+        
         pygame.init()
         pygame.font.init()
         
@@ -106,13 +105,13 @@ class Game:
         self.clock = pygame.time.Clock()
         self.guimanager = pygame_gui.UIManager(SCREEN_SIZE, "assets/theme.json")
         
+        if not DEBUG:
+            self.discordrpc = Presence("1150522780429848716")
+        
         print("StellarFuse initialized")
 
     def run(self):
         self.Frame = LoadingFrame(MainMenuFrame)
-        
-        if not DEBUG:
-            self.discordrpc = Presence("1150522780429848716")
         
         running = True
         while running:
@@ -193,11 +192,24 @@ class Game:
                             }
                         }
                     )
-                elif self.Frame.__class__ == GameFrame:
+                elif self.Frame.__class__ == GameFrame and self.Frame.InSpace == False:
                     self.discordrpc.set(
                         {
                             "state": "In Game",
                             "details": "Building ship",
+                            "assets": {
+                                "large_image": "apollo_icon_alt"
+                            },
+                            "timestamps": {
+                                "start": self.unixtimewhenframestarted
+                            }
+                        }
+                    )
+                elif self.Frame.__class__ == GameFrame and self.Frame.InSpace == True:
+                    self.discordrpc.set(
+                        {
+                            "state": "In Game",
+                            "details": "Traveling to Mars",
                             "assets": {
                                 "large_image": "apollo_icon_alt"
                             },
@@ -415,39 +427,29 @@ class Save:
     
 
 class GameFrame(Frame):
-    Size = pygame.Vector2(2048, 2048)
-    
-    CachedFiles = ["assets/sprites/traveler_0.png",
-                   "assets/sprites/traveler_1.png",
-                   "assets/sprites/traveler_2.png",
-                   "assets/sprites/traveler_3.png",
-                   "assets/sprites/background_grass.png",
-                   "assets/sprites/select_build.png",
-                   "assets/sprites/select_destroy.png",
-                   "assets/sprites/tiles/wall.png",
-                   "assets/sprites/tiles/floor.png"]
-    
-    GrassBackground = pygame.image.load("assets/sprites/background_grass.png")
-    SelectBuildImage = pygame.image.load("assets/sprites/select_build.png")
-    SelectDestroyImage = pygame.image.load("assets/sprites/select_destroy.png")
-    
-    Mode = "interact" #interact, build, destroy
-    InSpace = False
-    Money = 100000
-    Difficulty = 1
-    
-    TickCount = 0
-    
-    Day = 1
-    
-    SelectedTile = None
-    
+
     def __init__(self):
         super().__init__()
+        self.Size = pygame.Vector2(2048, 2048)
+    
+        self.GrassBackground = pygame.image.load("assets/sprites/background_grass.png")
+        self.SelectBuildImage = pygame.image.load("assets/sprites/select_build.png")
+        self.SelectDestroyImage = pygame.image.load("assets/sprites/select_destroy.png")
+        
+        self.Mode = "interact" #interact, build, destroy
+        self.InSpace = False
+        self.Money = 100000
+        self.Difficulty = 1
+        
+        self.TickCount = 0
+        
+        self.Day = 1
+        
+        self.SelectedTile = Wall
+        
         self.save = Save()
         self.save.load()
         self.LoadSave()
-        self.SelectedTile = Wall
             
     def LoadSave(self):    
         self.Money = self.save.data["money"]
@@ -623,8 +625,8 @@ class GameFrame(Frame):
         
         self.gui_bottombar = pygame_gui.elements.UIPanel(pygame.Rect((0, SCREEN_HEIGHT - 20), (SCREEN_WIDTH, 20)), 0, game.guimanager)
         
-        self.gui_moneytext = pygame_gui.elements.UILabel(pygame.Rect((2, 0), (96, 18)), f"${self.Money}", game.guimanager, self.gui_bottombar)
-        self.gui_daytext = pygame_gui.elements.UILabel(pygame.Rect((72, 0), (96, 18)), f"Day {self.Day}", game.guimanager, self.gui_bottombar)
+        self.gui_moneytext = pygame_gui.elements.UILabel(pygame.Rect((2, 0), (96, 18)), f"$0", game.guimanager, self.gui_bottombar)
+        self.gui_daytext = pygame_gui.elements.UILabel(pygame.Rect((72, 0), (96, 18)), f"Day 1", game.guimanager, self.gui_bottombar)
         
         self.gui_bottombar_interact = pygame_gui.elements.UIButton(pygame.Rect((SCREEN_WIDTH - 288, 0), (94, 18)), "Interact", game.guimanager, self.gui_bottombar)
         self.gui_bottombar_build = pygame_gui.elements.UIButton(pygame.Rect((SCREEN_WIDTH - 192, 0), (94, 18)), "Build", game.guimanager, self.gui_bottombar)
@@ -670,7 +672,9 @@ class GameFrame(Frame):
             self.gui_sidebar.hide()
         else:
             self.gui_sidebar.show()
-            
+        
+        #check if self.money exists
+        
         self.gui_moneytext.set_text(f"${self.Money:.0f}")
         self.gui_daytext.set_text(f"Day {self.Day}")
         
@@ -846,7 +850,6 @@ class CharacterCreatorFrame(Frame):
         game.changeFrame(GameFrame)
                 
 class LoadingFrame(Frame):
-    newFrame = None
     
     def __init__(self, newFrame):
         super().__init__()
@@ -855,7 +858,6 @@ class LoadingFrame(Frame):
     def frameUpdate(self):
         super().frameUpdate()
         game.guimanager.clear_and_reset()
-        asyncio.run(self.LoadAssets())
         game.Frame = self.newFrame()
         
     def draw(self, screen):
@@ -863,23 +865,9 @@ class LoadingFrame(Frame):
         loadingText = pygame.font.SysFont("microsoftsansserif", 32).render("Loading", False, "white")
         screen.blit(loadingText, (SCREEN_WIDTH / 2 - loadingText.get_width() / 2, SCREEN_HEIGHT / 2 - loadingText.get_height() / 2))
 
-    async def LoadAssets(self):
-        if self.newFrame.CachedFiles.__len__() > 0:
-            for file in self.newFrame.CachedFiles:
-                if os.path.exists(file):
-                    if file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg") or file.endswith(".gif") or file.endswith(".bmp") or file.endswith(".pcx") or file.endswith(".tga") or file.endswith(".tif") or file.endswith(".lbm") or file.endswith(".pbm") or file.endswith(".pgm") or file.endswith(".ppm") or file.endswith(".xpm"):
-                        pygame.image.load(file).convert()
-                        print(f"Loaded texture {file}")
-                    elif file.endswith(".wav") or file.endswith(".mp3") or file.endswith(".ogg") or file.endswith(".flac"):
-                        pygame.mixer.Sound(file)
-                        print(f"Loaded sound {file}")
-                    elif file.endswith(".ttf") or file.endswith(".otf"):
-                        pygame.font.Font(file)
-                        print(f"Loaded font {file}")
-                else:
-                    print(f"File {file} does not exist!")
                     
 class MainMenuFrame(Frame):
+    
     def __init__(self):
         super().__init__()
         pass
@@ -1024,18 +1012,20 @@ class Floor(Tile):
     
     
 class Traveler(Entity):
-    DrawOrder = 2
-    Collidable = False
     
-    firstname = "John"
-    lastname = "Doe"
-    skincolor = (255, 255, 255)
-    
-    ai_state = 1 #0 = stopped, 1 = wandering, 2 = moving to destination
-    destinationPosition = pygame.Vector2(0, 0)
     
     def __init__(self):
         super().__init__()
+        self.DrawOrder = 2
+        self.Collidable = False
+        
+        self.firstname = "John"
+        self.lastname = "Doe"
+        self.skincolor = (255, 255, 255)
+        
+        self.ai_state = 1 #0 = stopped, 1 = wandering, 2 = moving to destination
+        self.destinationPosition = pygame.Vector2(0, 0)
+        
         
     def draw(self, screen):
         super().draw(screen)
