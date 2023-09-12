@@ -406,6 +406,10 @@ class Save:
     def Exists(self):
         return os.path.exists(self.path)
     
+    def GameSaveExists(self):
+        print("Checking if game save exists...")
+        return self.data["time"] > 0
+    
     def Delete(self):
         os.remove(self.path)
     
@@ -884,6 +888,10 @@ class MainMenuFrame(Frame):
         self.gui_title = pygame_gui.elements.UILabel(pygame.Rect((SCREEN_WIDTH - 64, 0), (64, 32)), f"{TITLE}", game.guimanager)
         self.gui_newgamebutton = pygame_gui.elements.UIButton(pygame.Rect((2, SCREEN_HEIGHT- 78), (96, 24)), "New Game", game.guimanager)
         self.gui_loadgamebutton = pygame_gui.elements.UIButton(pygame.Rect((2, SCREEN_HEIGHT- 52), (96, 24)), "Load Game", game.guimanager)
+        tempsave = Save()
+        tempsave.load()
+        if tempsave.GameSaveExists() == False:
+            self.gui_loadgamebutton.disable()
         self.gui_quitbutton = pygame_gui.elements.UIButton(pygame.Rect((2, SCREEN_HEIGHT- 26), (96, 24)), "Quit", game.guimanager)
         
     def GUIButtonPressed(self, button):
