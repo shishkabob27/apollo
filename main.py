@@ -610,7 +610,7 @@ class GameFrame(Frame):
         if self.TickCount % 300 == 0 and self.InSpace == False:
             self.Day += 1
             self.AddMoney(10000)
-            pygame.mixer.Sound("assets/sounds/cash.mp3").play().set_volume(0.1)
+            #pygame.mixer.Sound("assets/sounds/cash.mp3").play().set_volume(0.1) #disabled because it is annoying
         
     def AddMoney(self, amount):
         self.Money += amount
