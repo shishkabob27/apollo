@@ -51,7 +51,6 @@ public class StellerFuseGame : Game
     {
         SpriteBatch = new SpriteBatch(GraphicsDevice);
 
-        // TODO: use this.Content to load your game content here
         // Initialize the Ui system
         var style = new UntexturedStyle(this.SpriteBatch) {
             Font = new GenericSpriteFont(this.Content.Load<SpriteFont>("sserife")),
@@ -60,14 +59,6 @@ public class StellerFuseGame : Game
 
 
         UiSystem = new UiSystem(this, style);
-
-        var box = new Panel(Anchor.Center, new Vector2(100, 1), Vector2.Zero, setHeightBasedOnChildren: true);
-        box.AddChild(new Paragraph(Anchor.AutoLeft, 1, "This is some example text!"));
-        box.AddChild(new Button(Anchor.AutoCenter, new Vector2(0.5F, 20), "Okay") {
-            OnPressed = element => this.UiSystem.Remove("InfoBox"),
-            PositionOffset = new Vector2(0, 1)
-        });
-        this.UiSystem.Add("InfoBox", box);
     }
 
     protected override void Update(GameTime gameTime)
