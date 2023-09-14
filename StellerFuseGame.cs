@@ -1,12 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using MLEM;
-using MLEM.Font;
-using MLEM.Textures;
-using MLEM.Ui;
-using MLEM.Ui.Elements;
-using MLEM.Ui.Style;
 using System;
 
 
@@ -16,8 +10,6 @@ public class StellerFuseGame : Game
 
     public GraphicsDeviceManager Graphics;
     public SpriteBatch SpriteBatch;
-
-    public UiSystem UiSystem;
 
     public Frame Frame;
 
@@ -50,15 +42,6 @@ public class StellerFuseGame : Game
     protected override void LoadContent()
     {
         SpriteBatch = new SpriteBatch(GraphicsDevice);
-
-        // Initialize the Ui system
-        var style = new UntexturedStyle(this.SpriteBatch) {
-            Font = new GenericSpriteFont(this.Content.Load<SpriteFont>("sserife")),
-            ButtonTexture = new NinePatch(this.Content.Load<Texture2D>("missing"), padding: 1)
-        };
-
-
-        UiSystem = new UiSystem(this, style);
     }
 
     protected override void Update(GameTime gameTime)
@@ -78,7 +61,6 @@ public class StellerFuseGame : Game
             }
         }
 
-        UiSystem.Update(gameTime);
 
         base.Update(gameTime);
     }
@@ -96,7 +78,6 @@ public class StellerFuseGame : Game
         SpriteBatch.DrawString(Content.Load<SpriteFont>("sserife"), "FPS: " + (int)(1 / gameTime.ElapsedGameTime.TotalSeconds), new Vector2(0, 0), Color.White);
         
         SpriteBatch.End();
-        UiSystem.Draw(gameTime, SpriteBatch);
         base.Draw(gameTime);
     }
 }
